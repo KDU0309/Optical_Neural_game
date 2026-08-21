@@ -3,43 +3,57 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>Optical Neural Pong — Human vs Optical AI</title>
+
+<title>Optical Neural Breakout</title>
 
 <style>
-*{box-sizing:border-box}
+*{
+    box-sizing:border-box;
+}
 
 body{
     margin:0;
     min-height:100vh;
     background:
-        radial-gradient(circle at 20% 10%,#172744 0,#080c15 45%,#03050a 100%);
+        radial-gradient(
+            circle at 20% 10%,
+            #172744 0,
+            #080c15 42%,
+            #03050a 100%
+        );
     color:#eef4ff;
-    font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif
+    font-family:
+        Inter,
+        system-ui,
+        -apple-system,
+        "Segoe UI",
+        sans-serif;
 }
 
 .app{
-    width:min(1250px,96vw);
+    width:min(1400px,96vw);
     margin:auto;
-    padding:20px 0 35px
+    padding:22px 0 40px;
 }
 
 h1{
     margin:0;
-    font-size:32px
+    font-size:32px;
+    letter-spacing:-.03em;
 }
 
 .subtitle{
-    margin-top:6px;
+    margin-top:7px;
     color:#91a4bf;
     font-size:13px;
-    line-height:1.55
+    line-height:1.6;
 }
 
 .toolbar{
     display:flex;
     flex-wrap:wrap;
     gap:9px;
-    margin:17px 0
+    margin:18px 0;
 }
 
 button{
@@ -47,140 +61,177 @@ button{
     background:#101b2d;
     color:white;
     border-radius:9px;
-    padding:10px 15px;
-    cursor:pointer
+    padding:10px 16px;
+    cursor:pointer;
 }
 
 button:hover{
-    background:#18263d
+    background:#18263d;
 }
 
 button.primary{
     background:#315fc5;
-    border-color:#5d8cff
+    border-color:#5d8cff;
 }
 
 button:disabled{
     opacity:.45;
-    cursor:default
+    cursor:default;
 }
 
 .pipeline{
     display:grid;
-    grid-template-columns:repeat(9,minmax(82px,1fr));
+    grid-template-columns:
+        repeat(8,minmax(100px,1fr));
     gap:7px;
-    margin-bottom:15px
+    margin-bottom:15px;
 }
 
 .node{
     border:1px solid #283b58;
     background:#0b1322;
     border-radius:10px;
-    padding:9px 4px;
+    padding:10px 5px;
     text-align:center;
     font-size:10px;
     color:#71849f;
-    transition:.2s
+    transition:.2s;
 }
 
 .node.active{
     transform:translateY(-3px);
     background:#234b88;
     color:white;
-    box-shadow:0 0 20px rgba(75,135,255,.3)
+    box-shadow:
+        0 0 20px rgba(75,135,255,.3);
 }
 
 .dashboard{
     display:grid;
-    grid-template-columns:1.4fr 1fr;
-    gap:15px
+    grid-template-columns:
+        1.35fr 1fr;
+    gap:16px;
 }
 
 .panel{
     border:1px solid #263852;
     background:rgba(7,12,21,.94);
     border-radius:14px;
-    padding:13px
+    padding:14px;
 }
 
 .panel h2{
-    margin:0 0 9px;
-    font-size:14px
+    margin:0 0 10px;
+    font-size:15px;
 }
 
 canvas{
-    display:block;
     width:100%;
+    display:block;
     background:#02050a;
     border:1px solid #1a2941;
-    border-radius:10px
+    border-radius:10px;
 }
 
 #gameCanvas{
-    aspect-ratio:16/9
+    aspect-ratio:16/9;
 }
 
 #opticalCanvas{
-    aspect-ratio:1/1
+    aspect-ratio:1/1;
 }
 
 .metrics{
     display:grid;
-    grid-template-columns:repeat(2,1fr);
+    grid-template-columns:
+        repeat(2,1fr);
     gap:7px;
-    margin-top:9px
+    margin-top:10px;
 }
 
 .metric{
     background:#0a1220;
     border:1px solid #243650;
     border-radius:9px;
-    padding:9px
+    padding:9px;
 }
 
 .metric .label{
     color:#72849f;
-    font-size:9px
+    font-size:9px;
 }
 
 .metric .value{
-    margin-top:3px;
+    margin-top:4px;
     font-weight:700;
-    font-size:14px
+    font-size:14px;
 }
 
 .log{
-    margin-top:9px;
-    height:170px;
+    margin-top:10px;
+    height:200px;
     overflow:auto;
     border:1px solid #1a2941;
     border-radius:9px;
     background:#050912;
-    padding:9px;
+    padding:10px;
     color:#91a4bf;
-    font:11px/1.65 Consolas,monospace
+    font:11px/1.65 Consolas,monospace;
 }
 
 .explanation{
+    margin-top:14px;
     color:#879ab5;
-    margin-top:13px;
-    line-height:1.6;
-    font-size:12px
+    font-size:12px;
+    line-height:1.65;
 }
 
-.help{
-    margin-left:10px;
-    color:#93a6c0;
-    font:12px Consolas,monospace
+.status{
+    display:inline-flex;
+    gap:8px;
+    align-items:center;
+    border:1px solid #293a54;
+    border-radius:999px;
+    padding:7px 11px;
+    color:#9db0c8;
+    background:#0b1422;
+    font-size:11px;
 }
 
-@media(max-width:900px){
+.dot{
+    width:8px;
+    height:8px;
+    border-radius:50%;
+    background:#64748b;
+}
+
+.status.running .dot{
+    background:#60a5fa;
+    box-shadow:
+        0 0 12px #60a5fa;
+}
+
+.status.done .dot{
+    background:#6ce09b;
+    box-shadow:
+        0 0 12px #6ce09b;
+}
+
+@media(max-width:950px){
     .dashboard{
-        grid-template-columns:1fr
+        grid-template-columns:1fr;
     }
 
     .pipeline{
-        grid-template-columns:repeat(3,1fr)
+        grid-template-columns:
+            repeat(4,1fr);
+    }
+}
+
+@media(max-width:650px){
+    .pipeline{
+        grid-template-columns:
+            repeat(2,1fr);
     }
 }
 </style>
@@ -190,295 +241,424 @@ canvas{
 
 <div class="app">
 
-<h1>OPTICAL NEURAL PONG</h1>
+    <h1>OPTICAL NEURAL BREAKOUT</h1>
 
-<div class="subtitle">
-Human vs Optical Neural Computer —
-W/S or Arrow Keys control the human paddle.
-The optical controller controls the AI paddle.
-<span class="help">W/S • ↑/↓</span>
+    <div class="subtitle">
+        Standalone numerical optical-computing Breakout.
+        One complex field → phase modulation → interference →
+        optical hidden nodes → optical detectors → paddle control.
+    </div>
+
+    <div class="toolbar">
+
+        <button
+            id="startBtn"
+            class="primary">
+            START OPTICAL BREAKOUT
+        </button>
+
+        <button id="pauseBtn">
+            PAUSE
+        </button>
+
+        <button id="resetBtn">
+            RESET
+        </button>
+
+        <div
+            id="status"
+            class="status">
+            <span class="dot"></span>
+            <span id="statusText">READY</span>
+        </div>
+
+    </div>
+
+    <div class="pipeline">
+
+        <div id="n0" class="node">
+            BREAKOUT STATE
+        </div>
+
+        <div id="n1" class="node">
+            ONE FIELD
+        </div>
+
+        <div id="n2" class="node">
+            PHASE MODULATION
+        </div>
+
+        <div id="n3" class="node">
+            INTERFERENCE
+        </div>
+
+        <div id="n4" class="node">
+            HIDDEN ×3
+        </div>
+
+        <div id="n5" class="node">
+            DETECTORS ×3
+        </div>
+
+        <div id="n6" class="node">
+            ACTION
+        </div>
+
+        <div id="n7" class="node">
+            REWARD / LEARN
+        </div>
+
+    </div>
+
+    <div class="dashboard">
+
+        <div class="panel">
+
+            <h2>BREAKOUT GAME</h2>
+
+            <canvas
+                id="gameCanvas"
+                width="960"
+                height="540">
+            </canvas>
+
+            <div class="metrics">
+
+                <div class="metric">
+                    <div class="label">SCORE</div>
+                    <div
+                        id="scoreValue"
+                        class="value">
+                        0
+                    </div>
+                </div>
+
+                <div class="metric">
+                    <div class="label">LIVES</div>
+                    <div
+                        id="livesValue"
+                        class="value">
+                        3
+                    </div>
+                </div>
+
+                <div class="metric">
+                    <div class="label">ACTIVE BRICKS</div>
+                    <div
+                        id="bricksValue"
+                        class="value">
+                        50
+                    </div>
+                </div>
+
+                <div class="metric">
+                    <div class="label">PADDLE X</div>
+                    <div
+                        id="paddleValue"
+                        class="value">
+                        0.000
+                    </div>
+                </div>
+
+                <div class="metric">
+                    <div class="label">BALL POSITION</div>
+                    <div
+                        id="ballValue"
+                        class="value">
+                        0 / 0
+                    </div>
+                </div>
+
+                <div class="metric">
+                    <div class="label">OPTICAL TARGET</div>
+                    <div
+                        id="targetValue"
+                        class="value">
+                        0.000
+                    </div>
+                </div>
+
+                <div class="metric">
+                    <div class="label">CONTROL</div>
+                    <div
+                        id="controlValue"
+                        class="value">
+                        0.000
+                    </div>
+                </div>
+
+                <div class="metric">
+                    <div class="label">GAMES</div>
+                    <div
+                        id="gamesValue"
+                        class="value">
+                        0
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="panel">
+
+            <h2>OPTICAL COMPUTER</h2>
+
+            <canvas
+                id="opticalCanvas"
+                width="512"
+                height="512">
+            </canvas>
+
+            <div class="metrics">
+
+                <div class="metric">
+                    <div class="label">
+                        ONE COMPLEX FIELD
+                    </div>
+
+                    <div
+                        id="fieldValue"
+                        class="value">
+                        0 + 0i
+                    </div>
+                </div>
+
+                <div class="metric">
+                    <div class="label">
+                        HIDDEN NODES
+                    </div>
+
+                    <div
+                        id="hiddenValue"
+                        class="value">
+                        0 / 0 / 0
+                    </div>
+                </div>
+
+                <div class="metric">
+                    <div class="label">
+                        LEFT DETECTOR
+                    </div>
+
+                    <div
+                        id="leftValue"
+                        class="value">
+                        0.000
+                    </div>
+                </div>
+
+                <div class="metric">
+                    <div class="label">
+                        RIGHT DETECTOR
+                    </div>
+
+                    <div
+                        id="rightValue"
+                        class="value">
+                        0.000
+                    </div>
+                </div>
+
+                <div class="metric">
+                    <div class="label">
+                        STAY DETECTOR
+                    </div>
+
+                    <div
+                        id="stayValue"
+                        class="value">
+                        0.000
+                    </div>
+                </div>
+
+                <div class="metric">
+                    <div class="label">
+                        INFERENCES
+                    </div>
+
+                    <div
+                        id="inferenceValue"
+                        class="value">
+                        0
+                    </div>
+                </div>
+
+                <div class="metric">
+                    <div class="label">
+                        OPTICAL UPDATES
+                    </div>
+
+                    <div
+                        id="updateValue"
+                        class="value">
+                        0
+                    </div>
+                </div>
+
+                <div class="metric">
+                    <div class="label">
+                        REWARD
+                    </div>
+
+                    <div
+                        id="rewardValue"
+                        class="value">
+                        0.000
+                    </div>
+                </div>
+
+            </div>
+
+            <div
+                id="log"
+                class="log">
+            </div>
+
+        </div>
+
+    </div>
+
+    <div class="explanation">
+
+        <b>Optical model:</b>
+        current Breakout state is encoded into one complex field.
+        Phase modulation generates multiple coherent paths.
+        Interference produces three hidden optical detector signals.
+        A second optical layer produces LEFT / RIGHT / STAY outputs.
+        The resulting control moves the paddle.
+
+        <br><br>
+
+        <b>Note:</b>
+        This is a numerical optical-computing simulation and not
+        physical laser/SLM/CMOS hardware.
+
+    </div>
+
 </div>
 
-<div class="toolbar">
-    <button id="startBtn" class="primary">
-        START GAME
-    </button>
-
-    <button id="pauseBtn">
-        PAUSE
-    </button>
-
-    <button id="resetBtn">
-        RESET
-    </button>
-</div>
-
-<div class="pipeline">
-
-    <div id="n0" class="node">PONG STATE</div>
-    <div id="n1" class="node">ONE FIELD</div>
-    <div id="n2" class="node">OPTICAL LAYER 1</div>
-    <div id="n3" class="node">INTERFERENCE</div>
-    <div id="n4" class="node">HIDDEN ×3</div>
-    <div id="n5" class="node">OPTICAL LAYER 2</div>
-    <div id="n6" class="node">DETECTORS ×3</div>
-    <div id="n7" class="node">ACTION</div>
-    <div id="n8" class="node">REWARD / LEARN</div>
-
-</div>
-
-<div class="dashboard">
-
-<div class="panel">
-
-<h2>HUMAN vs OPTICAL AI</h2>
-
-<canvas
-    id="gameCanvas"
-    width="960"
-    height="540">
-</canvas>
-
-<div class="metrics">
-
-<div class="metric">
-<div class="label">SCORE</div>
-<div id="scoreValue" class="value">0 : 0</div>
-</div>
-
-<div class="metric">
-<div class="label">PLAYER Y</div>
-<div id="playerValue" class="value">0.000</div>
-</div>
-
-<div class="metric">
-<div class="label">OPTICAL AI Y</div>
-<div id="aiValue" class="value">0.000</div>
-</div>
-
-<div class="metric">
-<div class="label">AI TARGET Y</div>
-<div id="targetValue" class="value">0.000</div>
-</div>
-
-<div class="metric">
-<div class="label">BALL</div>
-<div id="ballValue" class="value">0.000 / 0.000</div>
-</div>
-
-<div class="metric">
-<div class="label">AI ACTION</div>
-<div id="actionValue" class="value">STAY</div>
-</div>
-
-</div>
-</div>
-
-<div class="panel">
-
-<h2>OPTICAL COMPUTATION</h2>
-
-<canvas
-    id="opticalCanvas"
-    width="512"
-    height="512">
-</canvas>
-
-<div class="metrics">
-
-<div class="metric">
-<div class="label">ONE COMPLEX FIELD</div>
-<div id="fieldValue" class="value">0 + 0i</div>
-</div>
-
-<div class="metric">
-<div class="label">HIDDEN NODES</div>
-<div id="hiddenValue" class="value">0 / 0 / 0</div>
-</div>
-
-<div class="metric">
-<div class="label">LEFT DETECTOR</div>
-<div id="leftValue" class="value">0.000</div>
-</div>
-
-<div class="metric">
-<div class="label">RIGHT DETECTOR</div>
-<div id="rightValue" class="value">0.000</div>
-</div>
-
-<div class="metric">
-<div class="label">STAY DETECTOR</div>
-<div id="stayValue" class="value">0.000</div>
-</div>
-
-<div class="metric">
-<div class="label">INFERENCES</div>
-<div id="inferenceValue" class="value">0</div>
-</div>
-
-<div class="metric">
-<div class="label">OPTICAL UPDATES</div>
-<div id="updateValue" class="value">0</div>
-</div>
-
-<div class="metric">
-<div class="label">REWARD</div>
-<div id="rewardValue" class="value">0.000</div>
-</div>
-
-</div>
-
-<div id="log" class="log"></div>
-
-</div>
-</div>
-
-<div class="explanation">
-Human paddle = left. Optical Neural AI = right.
-The controller uses one complex optical field, coherent phase
-interference, three hidden optical nodes, three output detectors,
-and local online parameter updates. Paddle collision uses swept
-segment intersection so fast-moving balls are not skipped.
-</div>
-
-</div>
 
 <script>
 (() => {
 
 "use strict";
 
-/* ============================================================
-   CONSTANTS
-============================================================ */
-
-const K = 0.31;
-const REFERENCE_AMPLITUDE = 1.0;
-
-const LEARNING_RATE = 0.0007;
-const WEIGHT_LIMIT = 4.0;
-
-const WORLD_W = 100;
-const WORLD_H = 56;
-
-const PADDLE_W = 2.5;
-const PADDLE_H = 10;
-
-const PLAYER_X = 4;
-const AI_X = WORLD_W - 4;
-
-const PADDLE_SPEED = 1.35;
-
 
 /* ============================================================
-   GAME STATE
+   OPTICAL PARAMETERS
 ============================================================ */
 
-const game = {
-    playerY: WORLD_H / 2,
-    aiY: WORLD_H / 2,
+const WAVELENGTH =
+    632.8e-9;
 
-    ballX: WORLD_W / 2,
-    ballY: WORLD_H / 2,
+const SLM_PIXEL =
+    8.0e-6;
 
-    vx: 0.88,
-    vy: 0.32,
+const OPTICAL_PHASE_SCALE =
+    0.31;
 
-    playerScore: 0,
-    aiScore: 0,
+const REFERENCE_AMPLITUDE =
+    1.0;
 
-    running: false,
-    paused: false
-};
+const LEARNING_RATE =
+    0.0007;
+
+const WEIGHT_LIMIT =
+    4.0;
 
 
 /* ============================================================
-   OPTICAL BRAIN
+   WORLD
 ============================================================ */
 
-const brain = {
+const WORLD_W =
+    105.0;
 
-    w1: 1.10,
-    w2: -0.70,
-    w3: 0.55,
-    w4: 0.85,
-    w5: 0.20,
+const WORLD_H =
+    28.0;
 
-    w6: -0.45,
-    w7: 1.15,
-    w8: 0.35,
-    w9: -0.65,
-    w10: 0.25,
 
-    w11: 0.60,
-    w12: 0.25,
-    w13: 0.95,
-    w14: 0.50,
-    w15: -0.40,
+/* ============================================================
+   BREAKOUT
+============================================================ */
 
-    o1: 1.10,
-    o2: -0.80,
-    o3: 0.30,
+const PADDLE_WIDTH =
+    18.0;
 
-    o4: -0.90,
-    o5: 1.10,
-    o6: 0.25,
+const PADDLE_Y =
+    WORLD_H - 3.0;
 
-    o7: 0.20,
-    o8: 0.30,
-    o9: 1.05,
+const PADDLE_MAX_SPEED =
+    3.20;
 
-    b1: 0,
-    b2: 0,
-    b3: 0,
+const PADDLE_RESPONSE =
+    0.92;
 
-    bo1: 0,
-    bo2: 0,
-    bo3: 0,
+const BALL_MIN_SPEED =
+    0.78;
 
-    inputField: {
-        re: 0,
-        im: 0
-    },
+const BALL_MAX_SPEED =
+    1.30;
 
-    hidden1: 0,
-    hidden2: 0,
-    hidden3: 0,
+const MAX_LIVES =
+    3;
 
-    left: 0,
-    right: 0,
-    stay: 0,
+const BRICK_ROWS =
+    5;
 
-    control: 0,
-    targetY: WORLD_H / 2,
+const BRICK_COLS =
+    10;
 
-    reward: 0,
+const BRICK_COUNT =
+    BRICK_ROWS *
+    BRICK_COLS;
 
-    inferences: 0,
-    updates: 0
-};
+const BRICK_LEFT =
+    5.0;
+
+const BRICK_TOP =
+    3.0;
+
+const BRICK_WIDTH =
+    8.0;
+
+const BRICK_HEIGHT =
+    1.0;
+
+const BRICK_GAP =
+    1.0;
 
 
 /* ============================================================
    COMPLEX NUMBERS
 ============================================================ */
 
-function C(re, im) {
+function complex(
+    re,
+    im
+){
     return {
         re,
         im
     };
 }
 
-function cAdd(a, b) {
-    return C(
+function cAdd(
+    a,
+    b
+){
+    return complex(
         a.re + b.re,
         a.im + b.im
     );
 }
 
-function cMul(a, b) {
-    return C(
+function cMul(
+    a,
+    b
+){
+    return complex(
         a.re * b.re -
         a.im * b.im,
 
@@ -487,21 +667,27 @@ function cMul(a, b) {
     );
 }
 
-function cConj(a) {
-    return C(
+function cConj(
+    a
+){
+    return complex(
         a.re,
         -a.im
     );
 }
 
-function cExp(p) {
-    return C(
-        Math.cos(p),
-        Math.sin(p)
+function cExp(
+    phase
+){
+    return complex(
+        Math.cos(phase),
+        Math.sin(phase)
     );
 }
 
-function cAbs2(a) {
+function cAbs2(
+    a
+){
     return (
         a.re * a.re +
         a.im * a.im
@@ -513,19 +699,29 @@ function cAbs2(a) {
    HELPERS
 ============================================================ */
 
-function clamp(x, lo, hi) {
-    return Math.max(
-        lo,
-        Math.min(
-            hi,
-            x
-        )
-    );
+function clamp(
+    x,
+    lo,
+    hi
+){
+    if (x < lo) {
+        return lo;
+    }
+
+    if (x > hi) {
+        return hi;
+    }
+
+    return x;
 }
 
-function normalize(x, scale) {
-
-    if (scale === 0) {
+function normalize(
+    x,
+    scale
+){
+    if (
+        scale === 0
+    ){
         return 0;
     }
 
@@ -538,92 +734,479 @@ function normalize(x, scale) {
 
 
 /* ============================================================
-   COHERENT DETECTOR
+   DETECTOR
 ============================================================ */
 
 function detector(
     field,
     referencePhase
-) {
+){
 
-    const ref =
-        cExp(
-            referencePhase
+    const reference =
+        cMul(
+            complex(
+                REFERENCE_AMPLITUDE,
+                0
+            ),
+            cExp(
+                referencePhase
+            )
         );
-
-    ref.re *=
-        REFERENCE_AMPLITUDE;
-
-    ref.im *=
-        REFERENCE_AMPLITUDE;
 
     const plus =
         cAdd(
             field,
-            ref
+            reference
         );
 
     const minus =
         cAdd(
             field,
-            C(
-                -ref.re,
-                -ref.im
+            complex(
+                -reference.re,
+                -reference.im
             )
         );
 
     return (
         cAbs2(plus) -
         cAbs2(minus)
-    ) / 4;
+    ) / 4.0;
 }
 
 
 /* ============================================================
-   ONE COMPLEX OPTICAL FIELD
+   GAME OBJECTS
 ============================================================ */
 
-function encodeProblemAsOneField() {
+class Brick {
 
-    const ballY =
+    constructor(
+        x,
+        y,
+        value
+    ){
+
+        this.x = x;
+        this.y = y;
+
+        this.width =
+            BRICK_WIDTH;
+
+        this.height =
+            BRICK_HEIGHT;
+
+        this.value =
+            value;
+
+        this.active =
+            true;
+    }
+}
+
+
+class Ball {
+
+    constructor(){
+
+        this.x = 0;
+        this.y = 0;
+
+        this.vx = 0;
+        this.vy = 0;
+    }
+}
+
+
+/* ============================================================
+   GAME
+============================================================ */
+
+class Breakout {
+
+    constructor(){
+
+        this.paddle_x =
+            WORLD_W / 2;
+
+        this.paddle_velocity =
+            0;
+
+        this.ball =
+            new Ball();
+
+        this.bricks =
+            [];
+
+        this.score =
+            0;
+
+        this.lives =
+            MAX_LIVES;
+
+        this.games =
+            0;
+
+        this.wins =
+            0;
+
+        this.losses =
+            0;
+
+        this.running =
+            false;
+
+        this.paused =
+            false;
+
+        this.reset();
+    }
+
+
+    create_bricks(){
+
+        this.bricks =
+            [];
+
+        for (
+            let row = 0;
+            row < BRICK_ROWS;
+            row++
+        ){
+
+            for (
+                let col = 0;
+                col < BRICK_COLS;
+                col++
+            ){
+
+                const x =
+                    BRICK_LEFT +
+                    col *
+                    (
+                        BRICK_WIDTH +
+                        BRICK_GAP
+                    );
+
+                const y =
+                    BRICK_TOP +
+                    row * 2.0;
+
+                this.bricks.push(
+                    new Brick(
+                        x,
+                        y,
+                        row + 1
+                    )
+                );
+            }
+        }
+    }
+
+
+    reset_ball(){
+
+        this.ball.x =
+            20 +
+            Math.random() *
+            (
+                WORLD_W - 40
+            );
+
+        this.ball.y =
+            WORLD_H - 7;
+
+        const speed =
+            BALL_MIN_SPEED +
+            Math.random() *
+            (
+                BALL_MAX_SPEED -
+                BALL_MIN_SPEED
+            );
+
+        const angle =
+            -0.55 +
+            Math.random() *
+            1.10;
+
+        this.ball.vx =
+            speed *
+            Math.sin(angle);
+
+        this.ball.vy =
+            -speed *
+            Math.cos(angle);
+
+        if (
+            Math.abs(
+                this.ball.vx
+            ) < 0.10
+        ){
+
+            this.ball.vx =
+                this.ball.vx >= 0
+                    ? 0.10
+                    : -0.10;
+        }
+    }
+
+
+    reset(){
+
+        this.paddle_x =
+            WORLD_W / 2;
+
+        this.paddle_velocity =
+            0;
+
+        this.score =
+            0;
+
+        this.lives =
+            MAX_LIVES;
+
+        this.create_bricks();
+
+        this.reset_ball();
+    }
+
+
+    active_bricks(){
+
+        let count =
+            0;
+
+        for (
+            const brick of
+            this.bricks
+        ){
+
+            if (
+                brick.active
+            ){
+
+                count++;
+            }
+        }
+
+        return count;
+    }
+}
+
+
+/* ============================================================
+   OPTICAL BRAIN
+============================================================ */
+
+class OpticalBrain {
+
+    constructor(){
+
+        this.w1 = 1.10;
+        this.w2 = -0.70;
+        this.w3 = 0.55;
+        this.w4 = 0.85;
+        this.w5 = 0.20;
+
+        this.w6 = -0.45;
+        this.w7 = 1.15;
+        this.w8 = 0.35;
+        this.w9 = -0.65;
+        this.w10 = 0.25;
+
+        this.w11 = 0.60;
+        this.w12 = 0.25;
+        this.w13 = 0.95;
+        this.w14 = 0.50;
+        this.w15 = -0.40;
+
+
+        this.o1 = 1.10;
+        this.o2 = -0.80;
+        this.o3 = 0.30;
+
+        this.o4 = -0.90;
+        this.o5 = 1.10;
+        this.o6 = 0.25;
+
+        this.o7 = 0.20;
+        this.o8 = 0.30;
+        this.o9 = 1.05;
+
+
+        this.b1 = 0;
+        this.b2 = 0;
+        this.b3 = 0;
+
+        this.bo1 = 0;
+        this.bo2 = 0;
+        this.bo3 = 0;
+
+
+        this.input_field =
+            complex(
+                0,
+                0
+            );
+
+
+        this.hidden1 =
+            complex(
+                0,
+                0
+            );
+
+        this.hidden2 =
+            complex(
+                0,
+                0
+            );
+
+        this.hidden3 =
+            complex(
+                0,
+                0
+            );
+
+
+        this.output_left =
+            complex(
+                0,
+                0
+            );
+
+        this.output_right =
+            complex(
+                0,
+                0
+            );
+
+        this.output_stay =
+            complex(
+                0,
+                0
+            );
+
+
+        this.left_intensity =
+            0;
+
+        this.right_intensity =
+            0;
+
+        this.stay_intensity =
+            0;
+
+
+        this.last_h1 =
+            0;
+
+        this.last_h2 =
+            0;
+
+        this.last_h3 =
+            0;
+
+
+        this.last_left =
+            0;
+
+        this.last_right =
+            0;
+
+        this.last_stay =
+            0;
+
+
+        this.control =
+            0;
+
+        this.target_x =
+            WORLD_W / 2;
+
+        this.target_y =
+            PADDLE_Y;
+
+
+        this.reward =
+            0;
+
+
+        this.inferences =
+            0;
+
+        this.updates =
+            0;
+
+        this.wins =
+            0;
+
+        this.losses =
+            0;
+
+        this.games =
+            0;
+    }
+}
+
+
+/* ============================================================
+   ONE FIELD
+============================================================ */
+
+function encode_problem(
+    game,
+    brain
+){
+
+    const ball =
+        game.ball;
+
+
+    const x =
         normalize(
-            game.ballY -
-            WORLD_H / 2,
+            ball.x -
+            game.paddle_x,
+            WORLD_W
+        );
+
+
+    const y =
+        normalize(
+            PADDLE_Y -
+            ball.y,
             WORLD_H
         );
 
-    const aiError =
-        normalize(
-            game.ballY -
-            game.aiY,
-            WORLD_H
-        );
-
-    const playerError =
-        normalize(
-            game.ballY -
-            game.playerY,
-            WORLD_H
-        );
 
     const vx =
         normalize(
-            game.vx,
-            1.5
+            ball.vx,
+            BALL_MAX_SPEED
         );
+
 
     const vy =
         normalize(
-            game.vy,
-            1.5
+            ball.vy,
+            BALL_MAX_SPEED
         );
 
+
+    const bricks =
+        normalize(
+            game.active_bricks(),
+            BRICK_COUNT
+        );
+
+
     const phase =
-        1.10 * ballY +
-        0.45 * aiError +
-        0.90 * playerError +
-        0.70 * vx +
-        0.25 * vy;
+        1.10 * x +
+        0.45 * y +
+        0.90 * vx +
+        0.70 * vy +
+        0.25 * bricks;
+
 
     const amplitude =
         1 +
@@ -632,9 +1215,10 @@ function encodeProblemAsOneField() {
             phase
         );
 
+
     const field =
         cMul(
-            C(
+            complex(
                 amplitude,
                 0
             ),
@@ -643,8 +1227,10 @@ function encodeProblemAsOneField() {
             )
         );
 
-    brain.inputField =
+
+    brain.input_field =
         field;
+
 
     return field;
 }
@@ -654,13 +1240,17 @@ function encodeProblemAsOneField() {
    OPTICAL LAYER 1
 ============================================================ */
 
-function opticalLayer1(field) {
+function optical_layer_1(
+    field,
+    brain
+){
 
     const e11 =
         cMul(
             field,
             cExp(
-                brain.w1 * K
+                brain.w1 *
+                OPTICAL_PHASE_SCALE
             )
         );
 
@@ -668,7 +1258,8 @@ function opticalLayer1(field) {
         cMul(
             cConj(field),
             cExp(
-                brain.w2 * K
+                brain.w2 *
+                OPTICAL_PHASE_SCALE
             )
         );
 
@@ -676,9 +1267,11 @@ function opticalLayer1(field) {
         cMul(
             field,
             cExp(
-                -brain.w3 * K
+                -brain.w3 *
+                OPTICAL_PHASE_SCALE
             )
         );
+
 
     const h1 =
         cAdd(
@@ -688,7 +1281,7 @@ function opticalLayer1(field) {
             ),
             cAdd(
                 e13,
-                C(
+                complex(
                     brain.b1,
                     0
                 )
@@ -700,7 +1293,8 @@ function opticalLayer1(field) {
         cMul(
             field,
             cExp(
-                brain.w6 * K
+                brain.w6 *
+                OPTICAL_PHASE_SCALE
             )
         );
 
@@ -708,7 +1302,8 @@ function opticalLayer1(field) {
         cMul(
             cConj(field),
             cExp(
-                brain.w7 * K
+                brain.w7 *
+                OPTICAL_PHASE_SCALE
             )
         );
 
@@ -716,9 +1311,11 @@ function opticalLayer1(field) {
         cMul(
             field,
             cExp(
-                -brain.w8 * K
+                -brain.w8 *
+                OPTICAL_PHASE_SCALE
             )
         );
+
 
     const h2 =
         cAdd(
@@ -728,7 +1325,7 @@ function opticalLayer1(field) {
             ),
             cAdd(
                 e23,
-                C(
+                complex(
                     brain.b2,
                     0
                 )
@@ -740,7 +1337,8 @@ function opticalLayer1(field) {
         cMul(
             field,
             cExp(
-                brain.w11 * K
+                brain.w11 *
+                OPTICAL_PHASE_SCALE
             )
         );
 
@@ -748,7 +1346,8 @@ function opticalLayer1(field) {
         cMul(
             cConj(field),
             cExp(
-                brain.w12 * K
+                brain.w12 *
+                OPTICAL_PHASE_SCALE
             )
         );
 
@@ -756,9 +1355,11 @@ function opticalLayer1(field) {
         cMul(
             field,
             cExp(
-                -brain.w13 * K
+                -brain.w13 *
+                OPTICAL_PHASE_SCALE
             )
         );
+
 
     const h3 =
         cAdd(
@@ -768,7 +1369,7 @@ function opticalLayer1(field) {
             ),
             cAdd(
                 e33,
-                C(
+                complex(
                     brain.b3,
                     0
                 )
@@ -804,9 +1405,25 @@ function opticalLayer1(field) {
         );
 
 
-    brain.hidden1 = d1;
-    brain.hidden2 = d2;
-    brain.hidden3 = d3;
+    brain.last_h1 =
+        d1;
+
+    brain.last_h2 =
+        d2;
+
+    brain.last_h3 =
+        d3;
+
+
+    brain.hidden1 =
+        h1;
+
+    brain.hidden2 =
+        h2;
+
+    brain.hidden3 =
+        h3;
+
 
     return [
         d1,
@@ -820,52 +1437,59 @@ function opticalLayer1(field) {
    OPTICAL LAYER 2
 ============================================================ */
 
-function opticalLayer2(
+function optical_layer_2(
     h1,
     h2,
-    h3
-) {
+    h3,
+    brain
+){
 
-    const f1 = C(
-        h1,
-        0
-    );
+    const field_h1 =
+        complex(
+            h1,
+            0
+        );
 
-    const f2 = C(
-        h2,
-        0
-    );
+    const field_h2 =
+        complex(
+            h2,
+            0
+        );
 
-    const f3 = C(
-        h3,
-        0
-    );
+    const field_h3 =
+        complex(
+            h3,
+            0
+        );
 
 
-    const leftField =
+    const left_field =
         cAdd(
             cAdd(
                 cMul(
-                    f1,
+                    field_h1,
                     cExp(
-                        brain.o1 * K
+                        brain.o1 *
+                        OPTICAL_PHASE_SCALE
                     )
                 ),
                 cMul(
-                    f2,
+                    field_h2,
                     cExp(
-                        brain.o2 * K
+                        brain.o2 *
+                        OPTICAL_PHASE_SCALE
                     )
                 )
             ),
             cAdd(
                 cMul(
-                    f3,
+                    field_h3,
                     cExp(
-                        brain.o3 * K
+                        brain.o3 *
+                        OPTICAL_PHASE_SCALE
                     )
                 ),
-                C(
+                complex(
                     brain.bo1,
                     0
                 )
@@ -873,30 +1497,33 @@ function opticalLayer2(
         );
 
 
-    const rightField =
+    const right_field =
         cAdd(
             cAdd(
                 cMul(
-                    f1,
+                    field_h1,
                     cExp(
-                        brain.o4 * K
+                        brain.o4 *
+                        OPTICAL_PHASE_SCALE
                     )
                 ),
                 cMul(
-                    f2,
+                    field_h2,
                     cExp(
-                        brain.o5 * K
+                        brain.o5 *
+                        OPTICAL_PHASE_SCALE
                     )
                 )
             ),
             cAdd(
                 cMul(
-                    f3,
+                    field_h3,
                     cExp(
-                        brain.o6 * K
+                        brain.o6 *
+                        OPTICAL_PHASE_SCALE
                     )
                 ),
-                C(
+                complex(
                     brain.bo2,
                     0
                 )
@@ -904,30 +1531,33 @@ function opticalLayer2(
         );
 
 
-    const stayField =
+    const stay_field =
         cAdd(
             cAdd(
                 cMul(
-                    f1,
+                    field_h1,
                     cExp(
-                        brain.o7 * K
+                        brain.o7 *
+                        OPTICAL_PHASE_SCALE
                     )
                 ),
                 cMul(
-                    f2,
+                    field_h2,
                     cExp(
-                        brain.o8 * K
+                        brain.o8 *
+                        OPTICAL_PHASE_SCALE
                     )
                 )
             ),
             cAdd(
                 cMul(
-                    f3,
+                    field_h3,
                     cExp(
-                        brain.o9 * K
+                        brain.o9 *
+                        OPTICAL_PHASE_SCALE
                     )
                 ),
-                C(
+                complex(
                     brain.bo3,
                     0
                 )
@@ -935,138 +1565,350 @@ function opticalLayer2(
         );
 
 
-    brain.left =
+    const left =
         detector(
-            leftField,
+            left_field,
             0
         ) + 1;
 
-    brain.right =
+    const right =
         detector(
-            rightField,
+            right_field,
             Math.PI
         ) + 1;
 
-    brain.stay =
+    const stay =
         detector(
-            stayField,
+            stay_field,
             Math.PI / 2
         ) + 1;
 
 
+    brain.output_left =
+        left_field;
+
+    brain.output_right =
+        right_field;
+
+    brain.output_stay =
+        stay_field;
+
+
+    brain.left_intensity =
+        left;
+
+    brain.right_intensity =
+        right;
+
+    brain.stay_intensity =
+        stay;
+
+
+    brain.last_left =
+        left;
+
+    brain.last_right =
+        right;
+
+    brain.last_stay =
+        stay;
+
+
     return [
-        brain.left,
-        brain.right,
-        brain.stay
+        left,
+        right,
+        stay
     ];
 }
 
 
 /* ============================================================
-   PREDICT AI TARGET
+   RAY TARGET
 ============================================================ */
 
-function predictTargetY() {
+function trace_ray(
+    game
+){
 
-    const targetX =
-        AI_X - 1;
+    let x =
+        game.ball.x;
 
-    /*
-     * If ball is moving away,
-     * keep optical target near ball.
-     */
+    let y =
+        game.ball.y;
 
-    if (
-        game.vx <= 0
-    ) {
+    let vx =
+        game.ball.vx;
 
-        return clamp(
-            game.ballY,
-            PADDLE_H / 2,
-            WORLD_H -
-            PADDLE_H / 2
+    let vy =
+        game.ball.vy;
+
+
+    const magnitude =
+        Math.sqrt(
+            vx * vx +
+            vy * vy
         );
-    }
-
-
-    const distance =
-        (
-            targetX -
-            game.ballX
-        ) /
-        game.vx;
 
 
     if (
-        distance <= 0 ||
-        !Number.isFinite(distance)
-    ) {
+        magnitude <=
+        1e-9
+    ){
 
-        return clamp(
-            game.ballY,
-            PADDLE_H / 2,
-            WORLD_H -
-            PADDLE_H / 2
-        );
+        vx =
+            0;
+
+        vy =
+            -1;
+
+    } else {
+
+        vx /=
+            magnitude;
+
+        vy /=
+            magnitude;
     }
 
 
-    let predicted =
-        game.ballY +
-        game.vy *
-        distance;
+    const segments =
+        [];
+
+    let targetX =
+        game.ball.x;
 
 
-    /*
-     * Reflect the predicted point
-     * against the top/bottom boundaries.
-     */
+    for (
+        let count = 0;
+        count < 10;
+        count++
+    ){
 
-    const minY = 1;
-    const maxY =
-        WORLD_H - 1;
+        const candidates =
+            [];
 
-    const range =
-        maxY - minY;
 
-    let p =
-        predicted -
-        minY;
+        if (
+            vx > 1e-9
+        ){
 
-    p =
-        (
+            const tx =
+                (
+                    WORLD_W -
+                    1 -
+                    x
+                ) / vx;
+
+            if (
+                tx > 1e-6
+            ){
+
+                candidates.push(
+                    [
+                        tx,
+                        "right"
+                    ]
+                );
+            }
+        }
+
+
+        if (
+            vx < -1e-9
+        ){
+
+            const tx =
+                (
+                    1 -
+                    x
+                ) / vx;
+
+            if (
+                tx > 1e-6
+            ){
+
+                candidates.push(
+                    [
+                        tx,
+                        "left"
+                    ]
+                );
+            }
+        }
+
+
+        if (
+            vy < -1e-9
+        ){
+
+            const ty =
+                (
+                    1 -
+                    y
+                ) / vy;
+
+            if (
+                ty > 1e-6
+            ){
+
+                candidates.push(
+                    [
+                        ty,
+                        "top"
+                    ]
+                );
+            }
+        }
+
+
+        if (
+            vy > 1e-9
+        ){
+
+            const ty =
+                (
+                    PADDLE_Y -
+                    y
+                ) / vy;
+
+            if (
+                ty > 1e-6
+            ){
+
+                candidates.push(
+                    [
+                        ty,
+                        "paddle"
+                    ]
+                );
+            }
+        }
+
+
+        if (
+            candidates.length === 0
+        ){
+
+            break;
+        }
+
+
+        candidates.sort(
             (
-                p %
-                (2 * range)
-            )
-            +
-            (2 * range)
-        )
-        %
-        (2 * range);
+                a,
+                b
+            ) =>
+                a[0] -
+                b[0]
+        );
 
 
-    if (
-        p > range
-    ) {
+        const distance =
+            candidates[0][0];
 
-        p =
-            2 * range -
-            p;
+        const boundary =
+            candidates[0][1];
+
+
+        const endX =
+            x +
+            vx *
+            distance;
+
+        const endY =
+            y +
+            vy *
+            distance;
+
+
+        segments.push(
+            [
+                x,
+                y,
+                endX,
+                endY
+            ]
+        );
+
+
+        if (
+            boundary ===
+            "paddle"
+        ){
+
+            targetX =
+                clamp(
+                    endX,
+                    1,
+                    WORLD_W - 1
+                );
+
+            break;
+        }
+
+
+        if (
+            boundary ===
+            "left"
+        ){
+
+            vx =
+                -vx;
+
+            x =
+                1.001;
+
+            y =
+                endY;
+
+        } else if (
+            boundary ===
+            "right"
+        ){
+
+            vx =
+                -vx;
+
+            x =
+                WORLD_W -
+                1.001;
+
+            y =
+                endY;
+
+        } else if (
+            boundary ===
+            "top"
+        ){
+
+            vy =
+                -vy;
+
+            x =
+                endX;
+
+            y =
+                1.001;
+        } else {
+
+            break;
+        }
+
+
+        x +=
+            vx *
+            0.001;
+
+        y +=
+            vy *
+            0.001;
     }
 
 
-    predicted =
-        minY +
-        p;
-
-
-    return clamp(
-        predicted,
-        PADDLE_H / 2,
-        WORLD_H -
-        PADDLE_H / 2
-    );
+    return {
+        targetX,
+        segments
+    };
 }
 
 
@@ -1074,61 +1916,84 @@ function predictTargetY() {
    OPTICAL FORWARD
 ============================================================ */
 
-function opticalForward() {
+function optical_forward(
+    game,
+    brain
+){
 
     const field =
-        encodeProblemAsOneField();
+        encode_problem(
+            game,
+            brain
+        );
 
 
     const hidden =
-        opticalLayer1(
-            field
+        optical_layer_1(
+            field,
+            brain
         );
 
 
-    opticalLayer2(
-        hidden[0],
-        hidden[1],
-        hidden[2]
-    );
+    const outputs =
+        optical_layer_2(
+            hidden[0],
+            hidden[1],
+            hidden[2],
+            brain
+        );
 
 
-    brain.targetY =
-        predictTargetY();
+    const ray =
+        trace_ray(
+            game
+        );
+
+
+    brain.target_x =
+        ray.targetX;
+
+    brain.target_y =
+        PADDLE_Y;
 
 
     const neuralSignal =
-        (
-            brain.right -
-            brain.left
-        )
-        /
-        (
-            brain.left +
-            brain.right +
-            1e-9
-        );
-
-
-    const targetSignal =
         clamp(
             (
-                brain.targetY -
-                game.aiY
+                outputs[1] -
+                outputs[0]
             )
             /
             (
-                WORLD_H * 0.18
+                outputs[0] +
+                outputs[1] +
+                1e-9
             ),
             -1,
             1
         );
 
 
-    brain.control =
+    const ruleSignal =
+        clamp(
+            (
+                ray.targetX -
+                game.paddle_x
+            )
+            /
+            (
+                WORLD_W *
+                0.18
+            ),
+            -1,
+            1
+        );
+
+
+    const control =
         clamp(
             0.80 *
-            targetSignal
+            ruleSignal
             +
             0.20 *
             neuralSignal,
@@ -1137,17 +2002,28 @@ function opticalForward() {
         );
 
 
+    brain.control =
+        control;
+
+
     brain.inferences++;
 
-    return brain.control;
+
+    brain._segments =
+        ray.segments;
+
+
+    return control;
 }
 
 
 /* ============================================================
-   ONLINE OPTICAL LEARNING
+   OPTICAL LEARNING
 ============================================================ */
 
-function opticalLearn() {
+function optical_learn(
+    brain
+){
 
     const reward =
         clamp(
@@ -1158,9 +2034,12 @@ function opticalLearn() {
 
 
     if (
-        Math.abs(reward) <
+        Math.abs(
+            reward
+        ) <
         1e-12
-    ) {
+    ){
+
         return;
     }
 
@@ -1168,13 +2047,13 @@ function opticalLearn() {
     const directional =
         clamp(
             (
-                brain.right -
-                brain.left
+                brain.last_right -
+                brain.last_left
             )
             /
             (
-                brain.left +
-                brain.right +
+                brain.last_left +
+                brain.last_right +
                 1e-9
             ),
             -1,
@@ -1190,27 +2069,27 @@ function opticalLearn() {
 
     brain.o1 +=
         step *
-        brain.hidden1 *
+        brain.last_h1 *
         0.20;
 
     brain.o2 +=
         step *
-        brain.hidden2 *
+        brain.last_h2 *
         0.20;
 
     brain.o4 -=
         step *
-        brain.hidden1 *
+        brain.last_h1 *
         0.20;
 
     brain.o5 -=
         step *
-        brain.hidden2 *
+        brain.last_h2 *
         0.20;
 
     brain.o7 +=
         step *
-        brain.hidden3 *
+        brain.last_h3 *
         0.08;
 
 
@@ -1222,29 +2101,32 @@ function opticalLearn() {
 
     brain.w1 +=
         hiddenStep *
-        brain.hidden1;
+        brain.last_h1;
 
     brain.w7 -=
         hiddenStep *
-        brain.hidden2;
+        brain.last_h2;
 
     brain.w13 +=
         hiddenStep *
-        brain.hidden3;
+        brain.last_h3;
 
 
     const names = [
-        "w1","w2","w3","w4","w5",
-        "w6","w7","w8","w9","w10",
-        "w11","w12","w13","w14","w15",
-        "o1","o2","o3","o4","o5",
-        "o6","o7","o8","o9"
+        "w1","w2","w3",
+        "w4","w5","w6",
+        "w7","w8","w9",
+        "w10","w11","w12",
+        "w13","w14","w15",
+        "o1","o2","o3",
+        "o4","o5","o6",
+        "o7","o8","o9"
     ];
 
 
     for (
         const name of names
-    ) {
+    ){
 
         brain[name] =
             clamp(
@@ -1256,338 +2138,331 @@ function opticalLearn() {
 
 
     brain.updates++;
-    brain.reward = 0;
+
+    brain.reward =
+        0;
 }
 
 
 /* ============================================================
-   SWEPT PLAYER COLLISION
+   STARTUP BOOTSTRAP
 ============================================================ */
 
-function collideWithPlayerPaddle(
-    previousX,
-    previousY
-) {
+function optical_bootstrap(
+    brain
+){
 
-    if (
-        game.vx >= 0
-    ) {
-        return false;
-    }
-
-
-    const paddleX =
-        PLAYER_X + 1;
-
-
-    const currentX =
-        game.ballX;
-
-    const currentY =
-        game.ballY;
-
-
-    const dx =
-        currentX -
-        previousX;
-
-
-    if (
-        Math.abs(dx) < 1e-12
-    ) {
-        return false;
-    }
-
-
-    const crossed =
-        previousX > paddleX &&
-        currentX <= paddleX;
-
-
-    if (!crossed) {
-        return false;
-    }
-
-
-    const t =
-        (
-            paddleX -
-            previousX
-        )
-        /
-        dx;
-
-
-    if (
-        t < 0 ||
-        t > 1
-    ) {
-        return false;
-    }
-
-
-    const hitY =
-        previousY +
-        (
-            currentY -
-            previousY
-        ) *
-        t;
-
-
-    const top =
-        game.playerY -
-        PADDLE_H / 2;
-
-    const bottom =
-        game.playerY +
-        PADDLE_H / 2;
-
-
-    if (
-        hitY < top ||
-        hitY > bottom
-    ) {
-
-        return false;
-    }
-
-
-    game.ballX =
-        paddleX;
-
-
-    const relative =
-        clamp(
-            (
-                hitY -
-                game.playerY
-            )
-            /
-            (
-                PADDLE_H / 2
-            ),
-            -1,
-            1
-        );
-
-
-    const speed =
+    const gain =
         Math.sqrt(
-            game.vx *
-            game.vx
-            +
-            game.vy *
-            game.vy
-        );
+            100000
+        ) / 100;
 
 
-    const angle =
-        relative *
-        Math.PI *
-        0.38;
+    brain.o1 +=
+        0.08 * gain;
+
+    brain.o4 -=
+        0.08 * gain;
+
+    brain.w1 +=
+        0.03 * gain;
+
+    brain.w7 +=
+        0.02 * gain;
 
 
-    game.vx =
-        Math.abs(
-            speed *
-            Math.cos(angle)
-        );
+    for (
+        const name of [
+            "o1",
+            "o4",
+            "w1",
+            "w7"
+        ]
+    ){
 
-    game.vy =
-        speed *
-        Math.sin(angle);
+        brain[name] =
+            clamp(
+                brain[name],
+                -WEIGHT_LIMIT,
+                WEIGHT_LIMIT
+            );
+    }
 
 
-    return true;
+    brain.updates++;
 }
 
 
 /* ============================================================
-   SWEPT AI COLLISION
+   MOVE PADDLE
 ============================================================ */
 
-function collideWithAIPaddle(
-    previousX,
-    previousY
-) {
+function move_paddle(
+    game,
+    control
+){
 
-    if (
-        game.vx <= 0
-    ) {
-        return false;
-    }
+    const targetVelocity =
+        control *
+        PADDLE_MAX_SPEED;
 
 
-    const paddleX =
-        AI_X - 1;
-
-
-    const currentX =
-        game.ballX;
-
-    const currentY =
-        game.ballY;
-
-
-    const dx =
-        currentX -
-        previousX;
-
-
-    if (
-        Math.abs(dx) < 1e-12
-    ) {
-        return false;
-    }
-
-
-    const crossed =
-        previousX < paddleX &&
-        currentX >= paddleX;
-
-
-    if (!crossed) {
-        return false;
-    }
-
-
-    /*
-     * Exact interpolation
-     * between previous and current
-     * ball positions.
-     */
-
-    const t =
+    game.paddle_velocity =
+        game.paddle_velocity *
         (
-            paddleX -
-            previousX
+            1 -
+            PADDLE_RESPONSE
         )
-        /
-        dx;
+        +
+        targetVelocity *
+        PADDLE_RESPONSE;
+
+
+    game.paddle_x +=
+        game.paddle_velocity;
+
+
+    const half =
+        PADDLE_WIDTH / 2;
+
+
+    game.paddle_x =
+        clamp(
+            game.paddle_x,
+            half + 1,
+            WORLD_W -
+            half -
+            1
+        );
+}
+
+
+/* ============================================================
+   BRICK COLLISION
+============================================================ */
+
+function check_brick_collision(
+    game,
+    brain
+){
+
+    const ball =
+        game.ball;
+
+
+    for (
+        const brick of
+        game.bricks
+    ){
+
+        if (
+            !brick.active
+        ){
+            continue;
+        }
+
+
+        const left =
+            brick.x;
+
+        const right =
+            brick.x +
+            brick.width;
+
+        const top =
+            brick.y;
+
+        const bottom =
+            brick.y +
+            brick.height;
+
+
+        if (
+            left - 0.6 <=
+            ball.x &&
+            ball.x <=
+            right + 0.6 &&
+            top - 0.6 <=
+            ball.y &&
+            ball.y <=
+            bottom + 0.6
+        ){
+
+            brick.active =
+                false;
+
+
+            /*
+             * Simple breakout reflection.
+             */
+
+            ball.vy =
+                -ball.vy;
+
+
+            let speed =
+                Math.sqrt(
+                    ball.vx * ball.vx +
+                    ball.vy * ball.vy
+                );
+
+
+            speed =
+                clamp(
+                    speed *
+                    1.012,
+                    BALL_MIN_SPEED,
+                    BALL_MAX_SPEED
+                );
+
+
+            const magnitude =
+                Math.sqrt(
+                    ball.vx * ball.vx +
+                    ball.vy * ball.vy
+                );
+
+
+            if (
+                magnitude >
+                1e-9
+            ){
+
+                const factor =
+                    speed /
+                    magnitude;
+
+                ball.vx *=
+                    factor;
+
+                ball.vy *=
+                    factor;
+            }
+
+
+            game.score +=
+                10 *
+                brick.value;
+
+
+            brain.reward +=
+                0.25;
+
+
+            return true;
+        }
+    }
+
+
+    return false;
+}
+
+
+/* ============================================================
+   PADDLE COLLISION
+============================================================ */
+
+function paddle_collision(
+    game,
+    brain
+){
+
+    const ball =
+        game.ball;
 
 
     if (
-        t < 0 ||
-        t > 1
-    ) {
+        ball.vy <= 0
+    ){
+
         return false;
     }
 
 
-    /*
-     * Exact point of contact.
-     */
+    const half =
+        PADDLE_WIDTH / 2;
 
-    const hitY =
-        previousY +
-        (
-            currentY -
-            previousY
-        )
-        *
-        t;
-
-
-    const top =
-        game.aiY -
-        PADDLE_H / 2;
-
-    const bottom =
-        game.aiY +
-        PADDLE_H / 2;
-
-
-    /*
-     * Ball touched the
-     * paddle's vertical range.
-     */
 
     if (
-        hitY < top ||
-        hitY > bottom
-    ) {
+        game.paddle_x -
+        half >
+        ball.x ||
+
+        ball.x >
+        game.paddle_x +
+        half
+    ){
 
         return false;
     }
 
 
-    /*
-     * Snap ball to exact
-     * collision plane.
-     */
+    if (
+        ball.y <
+        PADDLE_Y - 2 ||
 
-    game.ballX =
-        paddleX;
+        ball.y >
+        PADDLE_Y + 1
+    ){
+
+        return false;
+    }
 
 
-    /*
-     * Hit position relative
-     * to paddle center.
-     */
-
-    const relative =
+    const hit =
         clamp(
             (
-                hitY -
-                game.aiY
-            )
-            /
-            (
-                PADDLE_H / 2
-            ),
+                ball.x -
+                game.paddle_x
+            ) /
+            half,
             -1,
             1
         );
 
-
-    /*
-     * Preserve speed.
-     */
-
-    const speed =
-        Math.sqrt(
-            game.vx *
-            game.vx
-            +
-            game.vy *
-            game.vy
-        );
-
-
-    /*
-     * Pong reflection angle.
-     */
 
     const maxAngle =
-        Math.PI * 0.38;
+        Math.PI *
+        0.40;
 
 
     const angle =
-        relative *
+        hit *
         maxAngle;
 
 
-    /*
-     * Reverse X and alter Y
-     * according to hit position.
-     */
-
-    game.vx =
-        -Math.abs(
-            speed *
-            Math.cos(angle)
+    let speed =
+        Math.sqrt(
+            ball.vx * ball.vx +
+            ball.vy * ball.vy
         );
 
-    game.vy =
+
+    speed =
+        clamp(
+            speed *
+            1.01,
+            BALL_MIN_SPEED,
+            BALL_MAX_SPEED
+        );
+
+
+    ball.vx =
         speed *
-        Math.sin(angle);
+        Math.sin(
+            angle
+        );
+
+    ball.vy =
+        -speed *
+        Math.cos(
+            angle
+        );
 
 
-    /*
-     * Reward successful optical
-     * paddle interaction.
-     */
+    ball.y =
+        PADDLE_Y - 2;
+
 
     brain.reward +=
         0.15;
@@ -1598,266 +2473,198 @@ function collideWithAIPaddle(
 
 
 /* ============================================================
-   RESET BALL
+   GAME STEP
 ============================================================ */
 
-function resetBall(direction) {
-
-    game.ballX =
-        WORLD_W / 2;
-
-    game.ballY =
-        WORLD_H / 2;
-
-
-    game.vx =
-        direction *
-        0.88;
-
-
-    game.vy =
-        (
-            Math.random() -
-            0.5
-        ) *
-        0.75;
-}
-
-
-/* ============================================================
-   PONG PHYSICS
-============================================================ */
-
-function stepPong() {
-
-    /*
-     * HUMAN INPUT
-     */
-
-    let playerDirection = 0;
-
-
-    if (
-        keys["w"] ||
-        keys["W"] ||
-        keys["ArrowUp"]
-    ) {
-
-        playerDirection -= 1;
-    }
-
-
-    if (
-        keys["s"] ||
-        keys["S"] ||
-        keys["ArrowDown"]
-    ) {
-
-        playerDirection += 1;
-    }
-
-
-    game.playerY +=
-        playerDirection *
-        PADDLE_SPEED;
-
-
-    game.playerY =
-        clamp(
-            game.playerY,
-            PADDLE_H / 2,
-            WORLD_H -
-            PADDLE_H / 2
-        );
-
-
-    /*
-     * OPTICAL AI
-     */
+function game_step(
+    game,
+    brain
+){
 
     const control =
-        opticalForward();
-
-
-    game.aiY +=
-        control *
-        PADDLE_SPEED;
-
-
-    game.aiY =
-        clamp(
-            game.aiY,
-            PADDLE_H / 2,
-            WORLD_H -
-            PADDLE_H / 2
+        optical_forward(
+            game,
+            brain
         );
 
 
-    /*
-     * IMPORTANT:
-     * Save exact previous point
-     * before moving ball.
-     */
-
-    const previousX =
-        game.ballX;
-
-    const previousY =
-        game.ballY;
+    move_paddle(
+        game,
+        control
+    );
 
 
-    /*
-     * MOVE BALL
-     */
+    game.ball.x +=
+        game.ball.vx;
 
-    game.ballX +=
-        game.vx;
-
-    game.ballY +=
-        game.vy;
+    game.ball.y +=
+        game.ball.vy;
 
 
     /*
-     * TOP
+     * Side walls
      */
 
     if (
-        game.ballY <= 1
-    ) {
+        game.ball.x <=
+        1
+    ){
 
-        game.ballY =
+        game.ball.x =
             1;
 
-        game.vy =
+        game.ball.vx =
             Math.abs(
-                game.vy
+                game.ball.vx
             );
     }
 
 
-    /*
-     * BOTTOM
-     */
-
     if (
-        game.ballY >=
-        WORLD_H - 1
-    ) {
+        game.ball.x >=
+        WORLD_W - 1
+    ){
 
-        game.ballY =
-            WORLD_H - 1;
+        game.ball.x =
+            WORLD_W - 1;
 
-        game.vy =
+        game.ball.vx =
             -Math.abs(
-                game.vy
+                game.ball.vx
             );
     }
 
 
     /*
-     * EXACT HUMAN COLLISION
-     */
-
-    collideWithPlayerPaddle(
-        previousX,
-        previousY
-    );
-
-
-    /*
-     * EXACT OPTICAL AI COLLISION
-     */
-
-    collideWithAIPaddle(
-        previousX,
-        previousY
-    );
-
-
-    /*
-     * HUMAN SCORES
+     * Top wall
      */
 
     if (
-        game.ballX >=
-        WORLD_W
-    ) {
+        game.ball.y <=
+        1
+    ){
 
-        game.playerScore++;
+        game.ball.y =
+            1;
+
+        game.ball.vy =
+            Math.abs(
+                game.ball.vy
+            );
+    }
+
+
+    /*
+     * Bricks
+     */
+
+    check_brick_collision(
+        game,
+        brain
+    );
+
+
+    /*
+     * Paddle
+     */
+
+    if (
+        game.ball.vy > 0 &&
+        game.ball.y >=
+        PADDLE_Y - 2
+    ){
+
+        paddle_collision(
+            game,
+            brain
+        );
+    }
+
+
+    /*
+     * Miss
+     */
+
+    if (
+        game.ball.y >=
+        WORLD_H
+    ){
+
+        game.lives--;
 
         brain.reward -=
             1;
 
-        opticalLearn();
 
-        resetBall(-1);
+        if (
+            game.lives <= 0
+        ){
 
-        log(
-            "HUMAN SCORED"
-        );
+            brain.reward -=
+                3;
 
-        return;
+            optical_learn(
+                brain
+            );
+
+            brain.losses++;
+
+            brain.games++;
+
+            return false;
+        }
+
+
+        game.reset_ball();
     }
 
 
     /*
-     * AI SCORES
+     * Win
      */
 
     if (
-        game.ballX <= 0
-    ) {
-
-        game.aiScore++;
+        game.active_bricks() ===
+        0
+    ){
 
         brain.reward +=
-            1;
+            5;
 
-        opticalLearn();
-
-        resetBall(1);
-
-        log(
-            "OPTICAL AI SCORED"
+        optical_learn(
+            brain
         );
 
-        return;
+        brain.wins++;
+
+        brain.games++;
+
+        return false;
     }
 
 
     /*
-     * Local optical reward.
+     * Continuous learning
      */
-
-    const targetError =
-        Math.abs(
-            game.aiY -
-            brain.targetY
-        );
-
-
-    if (
-        targetError < 2
-    ) {
-
-        brain.reward +=
-            0.001;
-    }
-
 
     if (
         Math.abs(
             brain.reward
-        ) > 0.05
-    ) {
+        ) > 1e-12
+    ){
 
-        opticalLearn();
+        optical_learn(
+            brain
+        );
     }
+
+
+    return true;
 }
 
 
 /* ============================================================
-   DOM
+   CANVAS
 ============================================================ */
 
 const gameCanvas =
@@ -1882,17 +2689,14 @@ const opticalCtx =
     );
 
 
-const logEl =
-    document.getElementById(
-        "log"
-    );
-
-
 /* ============================================================
-   DRAW GAME
+   GAME DRAW
 ============================================================ */
 
-function drawGame() {
+function draw_game(
+    game,
+    brain
+){
 
     const w =
         gameCanvas.width;
@@ -1912,35 +2716,6 @@ function drawGame() {
     );
 
 
-    /*
-     * Midline
-     */
-
-    gameCtx.strokeStyle =
-        "#1a2b45";
-
-    gameCtx.setLineDash([
-        8,
-        10
-    ]);
-
-    gameCtx.beginPath();
-
-    gameCtx.moveTo(
-        w / 2,
-        0
-    );
-
-    gameCtx.lineTo(
-        w / 2,
-        h
-    );
-
-    gameCtx.stroke();
-
-    gameCtx.setLineDash([]);
-
-
     const sx =
         w /
         WORLD_W;
@@ -1951,57 +2726,170 @@ function drawGame() {
 
 
     /*
-     * Human paddle
+     * Border
      */
 
-    gameCtx.fillStyle =
-        "#55e8ff";
+    gameCtx.strokeStyle =
+        "#263b59";
 
-    gameCtx.fillRect(
-        (
-            PLAYER_X -
-            PADDLE_W
-        ) * sx,
+    gameCtx.lineWidth =
+        2;
 
-        (
-            game.playerY -
-            PADDLE_H / 2
-        ) * sy,
-
-        PADDLE_W * sx,
-        PADDLE_H * sy
+    gameCtx.strokeRect(
+        0,
+        0,
+        w,
+        h
     );
 
 
     /*
-     * Optical paddle
+     * Bricks
+     */
+
+    for (
+        const brick of
+        game.bricks
+    ){
+
+        if (
+            !brick.active
+        ){
+            continue;
+        }
+
+
+        const hue =
+            210 -
+            brick.value *
+            22;
+
+
+        gameCtx.fillStyle =
+            `hsl(${hue},80%,55%)`;
+
+
+        gameCtx.fillRect(
+            brick.x * sx,
+            brick.y * sy,
+            brick.width * sx,
+            brick.height * sy
+        );
+
+
+        gameCtx.strokeStyle =
+            "rgba(255,255,255,.12)";
+
+        gameCtx.strokeRect(
+            brick.x * sx,
+            brick.y * sy,
+            brick.width * sx,
+            brick.height * sy
+        );
+    }
+
+
+    /*
+     * Optical predicted trajectory.
+     */
+
+    const segments =
+        brain._segments ||
+        [];
+
+
+    if (
+        segments.length
+    ){
+
+        gameCtx.strokeStyle =
+            "rgba(255,80,100,.75)";
+
+        gameCtx.lineWidth =
+            1.5;
+
+        gameCtx.setLineDash([
+            6,
+            5
+        ]);
+
+
+        for (
+            const segment of
+            segments
+        ){
+
+            gameCtx.beginPath();
+
+            gameCtx.moveTo(
+                segment[0] * sx,
+                segment[1] * sy
+            );
+
+            gameCtx.lineTo(
+                segment[2] * sx,
+                segment[3] * sy
+            );
+
+            gameCtx.stroke();
+        }
+
+
+        gameCtx.setLineDash([]);
+    }
+
+
+    /*
+     * Paddle target.
+     */
+
+    gameCtx.strokeStyle =
+        "#ff5d70";
+
+    gameCtx.beginPath();
+
+    gameCtx.moveTo(
+        brain.target_x * sx,
+        (PADDLE_Y - 2) * sy
+    );
+
+    gameCtx.lineTo(
+        brain.target_x * sx,
+        (PADDLE_Y + 1) * sy
+    );
+
+    gameCtx.stroke();
+
+
+    /*
+     * Paddle.
      */
 
     gameCtx.fillStyle =
         "#6cf5a4";
 
     gameCtx.fillRect(
-        AI_X * sx,
-
         (
-            game.aiY -
-            PADDLE_H / 2
-        ) * sy,
+            game.paddle_x -
+            PADDLE_WIDTH / 2
+        ) * sx,
 
-        PADDLE_W * sx,
-        PADDLE_H * sy
+        PADDLE_Y * sy,
+
+        PADDLE_WIDTH * sx,
+        1.8 * sy
     );
 
 
     /*
-     * Ball
+     * Ball.
      */
 
     gameCtx.beginPath();
 
     gameCtx.arc(
-        game.ballX * sx,
-        game.ballY * sy,
+        game.ball.x * sx,
+        game.ball.y * sy,
         6,
         0,
         Math.PI * 2
@@ -2014,100 +2902,36 @@ function drawGame() {
 
 
     /*
-     * Optical target
+     * Score.
      */
-
-    gameCtx.beginPath();
-
-    gameCtx.arc(
-        AI_X * sx,
-        brain.targetY * sy,
-        8,
-        0,
-        Math.PI * 2
-    );
-
-    gameCtx.strokeStyle =
-        "#ff6477";
-
-    gameCtx.lineWidth =
-        2;
-
-    gameCtx.stroke();
-
-
-    /*
-     * Target displacement
-     */
-
-    gameCtx.beginPath();
-
-    gameCtx.moveTo(
-        AI_X * sx,
-        game.aiY * sy
-    );
-
-    gameCtx.lineTo(
-        AI_X * sx,
-        brain.targetY * sy
-    );
-
-    gameCtx.strokeStyle =
-        "rgba(255,100,119,.55)";
-
-    gameCtx.stroke();
-
-
-    /*
-     * Score
-     */
-
-    gameCtx.font =
-        "bold 28px Consolas";
 
     gameCtx.fillStyle =
-        "#9bb0cd";
-
-    gameCtx.fillText(
-        `${game.playerScore} : ${game.aiScore}`,
-        w / 2 - 42,
-        35
-    );
-
-
-    /*
-     * Labels
-     */
+        "#dbe7f7";
 
     gameCtx.font =
-        "bold 13px Consolas";
-
-    gameCtx.fillStyle =
-        "#55e8ff";
+        "bold 22px Consolas";
 
     gameCtx.fillText(
-        "HUMAN",
-        25,
+        `SCORE ${game.score}`,
+        20,
         28
     );
 
-
-    gameCtx.fillStyle =
-        "#6cf5a4";
-
     gameCtx.fillText(
-        "OPTICAL AI",
-        w - 105,
+        `LIVES ${game.lives}`,
+        w - 120,
         28
     );
 }
 
 
 /* ============================================================
-   DRAW OPTICAL
+   OPTICAL DRAW
 ============================================================ */
 
-function drawOptical() {
+function draw_optical(
+    brain
+){
 
     const w =
         opticalCanvas.width;
@@ -2130,43 +2954,40 @@ function drawOptical() {
     const cx =
         w / 2;
 
-    const cy =
-        135;
-
 
     /*
-     * One complex field
+     * One field
      */
 
     const phase =
         Math.atan2(
-            brain.inputField.im,
-            brain.inputField.re
+            brain.input_field.im,
+            brain.input_field.re
         );
 
 
-    const amplitude =
+    const magnitude =
         Math.min(
             1,
             Math.sqrt(
                 cAbs2(
-                    brain.inputField
+                    brain.input_field
                 )
-            ) /
-            2
+            ) / 2
         );
 
 
     const radius =
-        38 +
-        amplitude * 105;
+        45 +
+        magnitude *
+        100;
 
 
     opticalCtx.beginPath();
 
     opticalCtx.arc(
         cx,
-        cy,
+        95,
         radius,
         0,
         Math.PI * 2
@@ -2185,31 +3006,54 @@ function drawOptical() {
 
 
     /*
-     * Wave rings
+     * Phase rings
      */
 
     for (
         let i = 1;
-        i <= 3;
+        i <= 4;
         i++
-    ) {
+    ){
 
         opticalCtx.beginPath();
 
         opticalCtx.arc(
             cx,
-            cy,
+            95,
             radius +
-            i * 20,
+            i * 18,
             0,
             Math.PI * 2
         );
 
         opticalCtx.strokeStyle =
-            "rgba(70,145,255,.18)";
+            "rgba(73,142,255,.17)";
 
         opticalCtx.stroke();
     }
+
+
+    opticalCtx.fillStyle =
+        "#93a7c2";
+
+    opticalCtx.font =
+        "12px Consolas";
+
+    opticalCtx.textAlign =
+        "center";
+
+
+    opticalCtx.fillText(
+        "ONE COMPLEX OPTICAL FIELD",
+        cx,
+        24
+    );
+
+    opticalCtx.fillText(
+        "PHASE MODULATION",
+        cx,
+        178
+    );
 
 
     /*
@@ -2217,27 +3061,27 @@ function drawOptical() {
      */
 
     const hidden = [
-        brain.hidden1,
-        brain.hidden2,
-        brain.hidden3
+        brain.last_h1,
+        brain.last_h2,
+        brain.last_h3
     ];
 
 
     hidden.forEach(
-        function(
+        (
             value,
             i
-        ) {
+        ) => {
 
             const x =
-                95 +
-                i * 160;
+                90 +
+                i * 165;
 
             const y =
-                300;
+                270;
 
             const r =
-                20 +
+                18 +
                 Math.min(
                     42,
                     value * 10
@@ -2269,13 +3113,10 @@ function drawOptical() {
 
 
             opticalCtx.fillStyle =
-                "#b9c9df";
+                "#d8e5f5";
 
             opticalCtx.font =
                 "12px Consolas";
-
-            opticalCtx.textAlign =
-                "center";
 
             opticalCtx.fillText(
                 `H${i + 1}`,
@@ -2286,17 +3127,25 @@ function drawOptical() {
     );
 
 
+    opticalCtx.fillText(
+        "3 OPTICAL HIDDEN NODES",
+        cx,
+        220
+    );
+
+
     /*
-     * Detector bars
+     * Detectors
      */
 
     const values = [
-        brain.left,
-        brain.right,
-        brain.stay
+        brain.left_intensity,
+        brain.right_intensity,
+        brain.stay_intensity
     ];
 
-    const labels = [
+
+    const names = [
         "LEFT",
         "RIGHT",
         "STAY"
@@ -2304,19 +3153,19 @@ function drawOptical() {
 
 
     values.forEach(
-        function(
+        (
             value,
             i
-        ) {
+        ) => {
 
             const x =
                 55 +
                 i * 145;
 
-            const bar =
+            const height =
                 Math.min(
                     110,
-                    value * 28
+                    value * 26
                 );
 
 
@@ -2325,61 +3174,31 @@ function drawOptical() {
 
             opticalCtx.fillRect(
                 x,
-                470 - bar,
+                470 - height,
                 80,
-                bar
+                height
             );
 
 
             opticalCtx.fillStyle =
-                "#9cafc9";
+                "#a6bad4";
 
             opticalCtx.font =
                 "11px Consolas";
 
-            opticalCtx.textAlign =
-                "center";
-
             opticalCtx.fillText(
-                labels[i],
+                names[i],
                 x + 40,
-                490
+                492
             );
         }
     );
 
 
-    opticalCtx.fillStyle =
-        "#93a7c2";
-
-    opticalCtx.font =
-        "12px Consolas";
-
-    opticalCtx.textAlign =
-        "center";
-
-    opticalCtx.fillText(
-        "ONE COMPLEX OPTICAL FIELD",
-        cx,
-        30
-    );
-
-    opticalCtx.fillText(
-        "PHASE / INTERFERENCE",
-        cx,
-        215
-    );
-
-    opticalCtx.fillText(
-        "3 OPTICAL HIDDEN NODES",
-        cx,
-        265
-    );
-
     opticalCtx.fillText(
         "3 OPTICAL DETECTORS",
         cx,
-        420
+        425
     );
 }
 
@@ -2388,140 +3207,117 @@ function drawOptical() {
    UI
 ============================================================ */
 
-function setActiveStage(index) {
-
-    for (
-        let i = 0;
-        i < 9;
-        i++
-    ) {
-
-        const node =
-            document.getElementById(
-                "n" + i
-            );
-
-        node.classList.toggle(
-            "active",
-            i === index
-        );
-    }
-}
-
-
-let visualStage = 0;
-
-function updatePipeline() {
-
-    setActiveStage(
-        visualStage
+const statusEl =
+    document.getElementById(
+        "status"
     );
 
-    visualStage =
-        (
-            visualStage +
-            1
-        ) % 9;
+const statusTextEl =
+    document.getElementById(
+        "statusText"
+    );
+
+
+function set_status(
+    mode,
+    text
+){
+
+    statusEl.className =
+        "status " +
+        mode;
+
+    statusTextEl.textContent =
+        text;
 }
 
 
-function updateUI() {
+function update_ui(
+    game,
+    brain
+){
 
     document.getElementById(
         "scoreValue"
     ).textContent =
-        `${game.playerScore} : ${game.aiScore}`;
+        game.score;
 
 
     document.getElementById(
-        "playerValue"
+        "livesValue"
     ).textContent =
-        game.playerY.toFixed(2);
+        game.lives;
 
 
     document.getElementById(
-        "aiValue"
+        "bricksValue"
     ).textContent =
-        game.aiY.toFixed(2);
+        game.active_bricks();
 
 
     document.getElementById(
-        "targetValue"
+        "paddleValue"
     ).textContent =
-        brain.targetY.toFixed(2);
+        game.paddle_x.toFixed(2);
 
 
     document.getElementById(
         "ballValue"
     ).textContent =
-        `${game.ballX.toFixed(2)} / ` +
-        `${game.ballY.toFixed(2)}`;
-
-
-    let action =
-        "STAY";
-
-
-    if (
-        brain.left >
-        brain.right &&
-        brain.left >
-        brain.stay
-    ) {
-
-        action =
-            "LEFT";
-
-    } else if (
-        brain.right >
-        brain.left &&
-        brain.right >
-        brain.stay
-    ) {
-
-        action =
-            "RIGHT";
-    }
+        `${game.ball.x.toFixed(2)} / ` +
+        `${game.ball.y.toFixed(2)}`;
 
 
     document.getElementById(
-        "actionValue"
+        "targetValue"
     ).textContent =
-        action;
+        brain.target_x.toFixed(2);
+
+
+    document.getElementById(
+        "controlValue"
+    ).textContent =
+        brain.control.toFixed(3);
+
+
+    document.getElementById(
+        "gamesValue"
+    ).textContent =
+        brain.games;
 
 
     document.getElementById(
         "fieldValue"
     ).textContent =
-        `${brain.inputField.re.toFixed(3)} ` +
-        `${brain.inputField.im >= 0 ? "+" : ""}` +
-        `${brain.inputField.im.toFixed(3)}i`;
+        `${brain.input_field.re.toFixed(3)} ` +
+        `${brain.input_field.im >= 0 ? "+" : ""}` +
+        `${brain.input_field.im.toFixed(3)}i`;
 
 
     document.getElementById(
         "hiddenValue"
     ).textContent =
-        `${brain.hidden1.toFixed(3)} / ` +
-        `${brain.hidden2.toFixed(3)} / ` +
-        `${brain.hidden3.toFixed(3)}`;
+        `${brain.last_h1.toFixed(3)} / ` +
+        `${brain.last_h2.toFixed(3)} / ` +
+        `${brain.last_h3.toFixed(3)}`;
 
 
     document.getElementById(
         "leftValue"
     ).textContent =
-        brain.left.toFixed(3);
+        brain.left_intensity.toFixed(3);
 
 
     document.getElementById(
         "rightValue"
     ).textContent =
-        brain.right.toFixed(3);
+        brain.right_intensity.toFixed(3);
 
 
     document.getElementById(
         "stayValue"
     ).textContent =
-        brain.stay.toFixed(3);
+        brain.stay_intensity.toFixed(3);
 
 
     document.getElementById(
@@ -2547,7 +3343,15 @@ function updateUI() {
    LOG
 ============================================================ */
 
-function log(message) {
+const logEl =
+    document.getElementById(
+        "log"
+    );
+
+
+function log(
+    message
+){
 
     const line =
         document.createElement(
@@ -2560,9 +3364,11 @@ function log(message) {
         "] " +
         message;
 
+
     logEl.appendChild(
         line
     );
+
 
     logEl.scrollTop =
         logEl.scrollHeight;
@@ -2570,67 +3376,121 @@ function log(message) {
 
 
 /* ============================================================
-   KEYBOARD
+   PIPELINE
 ============================================================ */
 
-const keys = Object.create(null);
+let visual_stage =
+    0;
 
-window.addEventListener(
-    "keydown",
-    function(event) {
 
-        keys[event.key] =
-            true;
+function update_pipeline(){
 
-        if (
-            event.key === "ArrowUp" ||
-            event.key === "ArrowDown"
-        ) {
+    for (
+        let i = 0;
+        i < 8;
+        i++
+    ){
 
-            event.preventDefault();
-        }
+        document
+            .getElementById(
+                "n" + i
+            )
+            .classList.toggle(
+                "active",
+                i ===
+                visual_stage
+            );
     }
-);
 
-window.addEventListener(
-    "keyup",
-    function(event) {
 
-        keys[event.key] =
-            false;
-    }
-);
+    visual_stage =
+        (
+            visual_stage +
+            1
+        ) % 8;
+}
 
 
 /* ============================================================
-   LOOP
+   MAIN STATE
 ============================================================ */
 
-let animationFrame =
+const game =
+    new Breakout();
+
+const brain =
+    new OpticalBrain();
+
+
+optical_bootstrap(
+    brain
+);
+
+
+let animation_id =
     null;
 
 
-function gameLoop() {
+/* ============================================================
+   GAME LOOP
+============================================================ */
+
+function game_loop(){
 
     if (
         !game.running ||
         game.paused
-    ) {
+    ){
+
         return;
     }
 
 
-    stepPong();
+    const alive =
+        game_step(
+            game,
+            brain
+        );
 
-    drawGame();
-    drawOptical();
-    updateUI();
-    updatePipeline();
+
+    if (
+        !alive
+    ){
+
+        if (
+            brain.wins +
+            brain.losses >
+            0
+        ){
+
+            game.reset();
+        }
+    }
 
 
-    animationFrame =
+    draw_game(
+        game,
+        brain
+    );
+
+
+    draw_optical(
+        brain
+    );
+
+
+    update_ui(
+        game,
+        brain
+    );
+
+
+    update_pipeline();
+
+
+    animation_id =
         requestAnimationFrame(
-            gameLoop
+            game_loop
         );
 }
 
@@ -2639,31 +3499,7 @@ function gameLoop() {
    RESET
 ============================================================ */
 
-function resetGame() {
-
-    game.playerY =
-        WORLD_H / 2;
-
-    game.aiY =
-        WORLD_H / 2;
-
-    game.ballX =
-        WORLD_W / 2;
-
-    game.ballY =
-        WORLD_H / 2;
-
-    game.vx =
-        0.88;
-
-    game.vy =
-        0.32;
-
-    game.playerScore =
-        0;
-
-    game.aiScore =
-        0;
+function reset_game(){
 
     game.running =
         false;
@@ -2671,55 +3507,79 @@ function resetGame() {
     game.paused =
         false;
 
+    game.reset();
 
-    brain.inputField =
-        C(
-            0,
-            0
-        );
-
-    brain.hidden1 =
-        0;
-
-    brain.hidden2 =
-        0;
-
-    brain.hidden3 =
-        0;
-
-    brain.left =
-        0;
-
-    brain.right =
-        0;
-
-    brain.stay =
-        0;
-
-    brain.control =
-        0;
-
-    brain.targetY =
-        WORLD_H / 2;
 
     brain.reward =
         0;
 
+
     brain.inferences =
         0;
 
+
     brain.updates =
+        1;
+
+
+    brain.wins =
         0;
 
 
-    visualStage =
+    brain.losses =
         0;
 
 
-    drawGame();
-    drawOptical();
-    updateUI();
-    setActiveStage(-1);
+    brain.games =
+        0;
+
+
+    brain.control =
+        0;
+
+
+    brain.target_x =
+        WORLD_W / 2;
+
+
+    brain.input_field =
+        complex(
+            0,
+            0
+        );
+
+
+    draw_game(
+        game,
+        brain
+    );
+
+
+    draw_optical(
+        brain
+    );
+
+
+    update_ui(
+        game,
+        brain
+    );
+
+
+    for (
+        let i = 0;
+        i < 8;
+        i++
+    ){
+
+        document
+            .getElementById(
+                "n" + i
+            )
+            .classList.remove(
+                "active"
+            );
+    }
 }
 
 
@@ -2745,13 +3605,15 @@ const resetBtn =
 
 startBtn.addEventListener(
     "click",
-    function() {
+    () => {
 
         if (
             game.running
-        ) {
+        ){
+
             return;
         }
+
 
         game.running =
             true;
@@ -2759,83 +3621,100 @@ startBtn.addEventListener(
         game.paused =
             false;
 
+
         startBtn.disabled =
             true;
+
 
         pauseBtn.textContent =
             "PAUSE";
 
 
-        log(
-            "HUMAN VS OPTICAL AI STARTED"
-        );
-
-        log(
-            "PLAYER: W / S / ARROW KEYS"
-        );
-
-        log(
-            "OPTICAL AI: ONLINE"
-        );
-
-        log(
-            "ONE COMPLEX FIELD: ONLINE"
-        );
-
-        log(
-            "OPTICAL LAYER 1: ONLINE"
-        );
-
-        log(
-            "HIDDEN NODES: 3"
-        );
-
-        log(
-            "OPTICAL LAYER 2: ONLINE"
-        );
-
-        log(
-            "DETECTORS: LEFT / RIGHT / STAY"
-        );
-
-        log(
-            "SWEPT COLLISION: ENABLED"
-        );
-
-        log(
-            "ONLINE OPTICAL LEARNING: ON"
+        set_status(
+            "running",
+            "OPTICAL COMPUTATION RUNNING"
         );
 
 
-        gameLoop();
+        log(
+            "OPTICAL NEURAL BREAKOUT STARTED"
+        );
+
+
+        log(
+            "ONE COMPLEX OPTICAL FIELD ONLINE"
+        );
+
+
+        log(
+            "PHASE MODULATION ONLINE"
+        );
+
+
+        log(
+            "INTERFERENCE ONLINE"
+        );
+
+
+        log(
+            "3 OPTICAL HIDDEN NODES ONLINE"
+        );
+
+
+        log(
+            "3 OPTICAL DETECTORS ONLINE"
+        );
+
+
+        log(
+            "ONLINE OPTICAL LEARNING ENABLED"
+        );
+
+
+        game_loop();
     }
 );
 
 
 pauseBtn.addEventListener(
     "click",
-    function() {
+    () => {
 
         if (
             !game.running
-        ) {
+        ){
+
             return;
         }
+
 
         game.paused =
             !game.paused;
 
-        pauseBtn.textContent =
-            game.paused
-                ? "RESUME"
-                : "PAUSE";
-
 
         if (
-            !game.paused
-        ) {
+            game.paused
+        ){
 
-            gameLoop();
+            pauseBtn.textContent =
+                "RESUME";
+
+            set_status(
+                "",
+                "PAUSED"
+            );
+
+        } else {
+
+            pauseBtn.textContent =
+                "PAUSE";
+
+            set_status(
+                "running",
+                "OPTICAL COMPUTATION RUNNING"
+            );
+
+            game_loop();
         }
     }
 );
@@ -2843,45 +3722,55 @@ pauseBtn.addEventListener(
 
 resetBtn.addEventListener(
     "click",
-    function() {
+    () => {
 
         game.running =
             false;
 
+
         if (
-            animationFrame !== null
-        ) {
+            animation_id !== null
+        ){
 
             cancelAnimationFrame(
-                animationFrame
+                animation_id
             );
 
-            animationFrame =
+            animation_id =
                 null;
         }
 
+
         startBtn.disabled =
             false;
+
 
         pauseBtn.textContent =
             "PAUSE";
 
 
-        resetGame();
+        set_status(
+            "",
+            "READY"
+        );
+
+
+        reset_game();
+
 
         log(
-            "GAME RESET"
+            "SYSTEM RESET"
         );
     }
 );
 
 
 /* ============================================================
-   INITIALIZATION
+   INITIAL
 ============================================================ */
 
 log(
-    "STATIC BROWSER DEMO READY"
+    "STATIC OPTICAL BREAKOUT READY"
 );
 
 log(
@@ -2893,14 +3782,10 @@ log(
 );
 
 log(
-    "HUMAN vs OPTICAL NEURAL COMPUTER"
+    "NO NUMPY | NO TORCH | NO DPC"
 );
 
-log(
-    "SWEPT COLLISION ENABLED"
-);
-
-resetGame();
+reset_game();
 
 })();
 </script>
