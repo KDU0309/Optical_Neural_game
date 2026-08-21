@@ -1,0 +1,2909 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Optical Neural Pong — Human vs Optical AI</title>
+
+<style>
+*{box-sizing:border-box}
+
+body{
+    margin:0;
+    min-height:100vh;
+    background:
+        radial-gradient(circle at 20% 10%,#172744 0,#080c15 45%,#03050a 100%);
+    color:#eef4ff;
+    font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif
+}
+
+.app{
+    width:min(1250px,96vw);
+    margin:auto;
+    padding:20px 0 35px
+}
+
+h1{
+    margin:0;
+    font-size:32px
+}
+
+.subtitle{
+    margin-top:6px;
+    color:#91a4bf;
+    font-size:13px;
+    line-height:1.55
+}
+
+.toolbar{
+    display:flex;
+    flex-wrap:wrap;
+    gap:9px;
+    margin:17px 0
+}
+
+button{
+    border:1px solid #365074;
+    background:#101b2d;
+    color:white;
+    border-radius:9px;
+    padding:10px 15px;
+    cursor:pointer
+}
+
+button:hover{
+    background:#18263d
+}
+
+button.primary{
+    background:#315fc5;
+    border-color:#5d8cff
+}
+
+button:disabled{
+    opacity:.45;
+    cursor:default
+}
+
+.pipeline{
+    display:grid;
+    grid-template-columns:repeat(9,minmax(82px,1fr));
+    gap:7px;
+    margin-bottom:15px
+}
+
+.node{
+    border:1px solid #283b58;
+    background:#0b1322;
+    border-radius:10px;
+    padding:9px 4px;
+    text-align:center;
+    font-size:10px;
+    color:#71849f;
+    transition:.2s
+}
+
+.node.active{
+    transform:translateY(-3px);
+    background:#234b88;
+    color:white;
+    box-shadow:0 0 20px rgba(75,135,255,.3)
+}
+
+.dashboard{
+    display:grid;
+    grid-template-columns:1.4fr 1fr;
+    gap:15px
+}
+
+.panel{
+    border:1px solid #263852;
+    background:rgba(7,12,21,.94);
+    border-radius:14px;
+    padding:13px
+}
+
+.panel h2{
+    margin:0 0 9px;
+    font-size:14px
+}
+
+canvas{
+    display:block;
+    width:100%;
+    background:#02050a;
+    border:1px solid #1a2941;
+    border-radius:10px
+}
+
+#gameCanvas{
+    aspect-ratio:16/9
+}
+
+#opticalCanvas{
+    aspect-ratio:1/1
+}
+
+.metrics{
+    display:grid;
+    grid-template-columns:repeat(2,1fr);
+    gap:7px;
+    margin-top:9px
+}
+
+.metric{
+    background:#0a1220;
+    border:1px solid #243650;
+    border-radius:9px;
+    padding:9px
+}
+
+.metric .label{
+    color:#72849f;
+    font-size:9px
+}
+
+.metric .value{
+    margin-top:3px;
+    font-weight:700;
+    font-size:14px
+}
+
+.log{
+    margin-top:9px;
+    height:170px;
+    overflow:auto;
+    border:1px solid #1a2941;
+    border-radius:9px;
+    background:#050912;
+    padding:9px;
+    color:#91a4bf;
+    font:11px/1.65 Consolas,monospace
+}
+
+.explanation{
+    color:#879ab5;
+    margin-top:13px;
+    line-height:1.6;
+    font-size:12px
+}
+
+.help{
+    margin-left:10px;
+    color:#93a6c0;
+    font:12px Consolas,monospace
+}
+
+@media(max-width:900px){
+    .dashboard{
+        grid-template-columns:1fr
+    }
+
+    .pipeline{
+        grid-template-columns:repeat(3,1fr)
+    }
+}
+</style>
+</head>
+
+<body>
+
+<div class="app">
+
+<h1>OPTICAL NEURAL PONG</h1>
+
+<div class="subtitle">
+Human vs Optical Neural Computer —
+W/S or Arrow Keys control the human paddle.
+The optical controller controls the AI paddle.
+<span class="help">W/S • ↑/↓</span>
+</div>
+
+<div class="toolbar">
+    <button id="startBtn" class="primary">
+        START GAME
+    </button>
+
+    <button id="pauseBtn">
+        PAUSE
+    </button>
+
+    <button id="resetBtn">
+        RESET
+    </button>
+</div>
+
+<div class="pipeline">
+
+    <div id="n0" class="node">PONG STATE</div>
+    <div id="n1" class="node">ONE FIELD</div>
+    <div id="n2" class="node">OPTICAL LAYER 1</div>
+    <div id="n3" class="node">INTERFERENCE</div>
+    <div id="n4" class="node">HIDDEN ×3</div>
+    <div id="n5" class="node">OPTICAL LAYER 2</div>
+    <div id="n6" class="node">DETECTORS ×3</div>
+    <div id="n7" class="node">ACTION</div>
+    <div id="n8" class="node">REWARD / LEARN</div>
+
+</div>
+
+<div class="dashboard">
+
+<div class="panel">
+
+<h2>HUMAN vs OPTICAL AI</h2>
+
+<canvas
+    id="gameCanvas"
+    width="960"
+    height="540">
+</canvas>
+
+<div class="metrics">
+
+<div class="metric">
+<div class="label">SCORE</div>
+<div id="scoreValue" class="value">0 : 0</div>
+</div>
+
+<div class="metric">
+<div class="label">PLAYER Y</div>
+<div id="playerValue" class="value">0.000</div>
+</div>
+
+<div class="metric">
+<div class="label">OPTICAL AI Y</div>
+<div id="aiValue" class="value">0.000</div>
+</div>
+
+<div class="metric">
+<div class="label">AI TARGET Y</div>
+<div id="targetValue" class="value">0.000</div>
+</div>
+
+<div class="metric">
+<div class="label">BALL</div>
+<div id="ballValue" class="value">0.000 / 0.000</div>
+</div>
+
+<div class="metric">
+<div class="label">AI ACTION</div>
+<div id="actionValue" class="value">STAY</div>
+</div>
+
+</div>
+</div>
+
+<div class="panel">
+
+<h2>OPTICAL COMPUTATION</h2>
+
+<canvas
+    id="opticalCanvas"
+    width="512"
+    height="512">
+</canvas>
+
+<div class="metrics">
+
+<div class="metric">
+<div class="label">ONE COMPLEX FIELD</div>
+<div id="fieldValue" class="value">0 + 0i</div>
+</div>
+
+<div class="metric">
+<div class="label">HIDDEN NODES</div>
+<div id="hiddenValue" class="value">0 / 0 / 0</div>
+</div>
+
+<div class="metric">
+<div class="label">LEFT DETECTOR</div>
+<div id="leftValue" class="value">0.000</div>
+</div>
+
+<div class="metric">
+<div class="label">RIGHT DETECTOR</div>
+<div id="rightValue" class="value">0.000</div>
+</div>
+
+<div class="metric">
+<div class="label">STAY DETECTOR</div>
+<div id="stayValue" class="value">0.000</div>
+</div>
+
+<div class="metric">
+<div class="label">INFERENCES</div>
+<div id="inferenceValue" class="value">0</div>
+</div>
+
+<div class="metric">
+<div class="label">OPTICAL UPDATES</div>
+<div id="updateValue" class="value">0</div>
+</div>
+
+<div class="metric">
+<div class="label">REWARD</div>
+<div id="rewardValue" class="value">0.000</div>
+</div>
+
+</div>
+
+<div id="log" class="log"></div>
+
+</div>
+</div>
+
+<div class="explanation">
+Human paddle = left. Optical Neural AI = right.
+The controller uses one complex optical field, coherent phase
+interference, three hidden optical nodes, three output detectors,
+and local online parameter updates. Paddle collision uses swept
+segment intersection so fast-moving balls are not skipped.
+</div>
+
+</div>
+
+<script>
+(() => {
+
+"use strict";
+
+/* ============================================================
+   CONSTANTS
+============================================================ */
+
+const K = 0.31;
+const REFERENCE_AMPLITUDE = 1.0;
+
+const LEARNING_RATE = 0.0007;
+const WEIGHT_LIMIT = 4.0;
+
+const WORLD_W = 100;
+const WORLD_H = 56;
+
+const PADDLE_W = 2.5;
+const PADDLE_H = 10;
+
+const PLAYER_X = 4;
+const AI_X = WORLD_W - 4;
+
+const PADDLE_SPEED = 1.35;
+
+
+/* ============================================================
+   GAME STATE
+============================================================ */
+
+const game = {
+    playerY: WORLD_H / 2,
+    aiY: WORLD_H / 2,
+
+    ballX: WORLD_W / 2,
+    ballY: WORLD_H / 2,
+
+    vx: 0.88,
+    vy: 0.32,
+
+    playerScore: 0,
+    aiScore: 0,
+
+    running: false,
+    paused: false
+};
+
+
+/* ============================================================
+   OPTICAL BRAIN
+============================================================ */
+
+const brain = {
+
+    w1: 1.10,
+    w2: -0.70,
+    w3: 0.55,
+    w4: 0.85,
+    w5: 0.20,
+
+    w6: -0.45,
+    w7: 1.15,
+    w8: 0.35,
+    w9: -0.65,
+    w10: 0.25,
+
+    w11: 0.60,
+    w12: 0.25,
+    w13: 0.95,
+    w14: 0.50,
+    w15: -0.40,
+
+    o1: 1.10,
+    o2: -0.80,
+    o3: 0.30,
+
+    o4: -0.90,
+    o5: 1.10,
+    o6: 0.25,
+
+    o7: 0.20,
+    o8: 0.30,
+    o9: 1.05,
+
+    b1: 0,
+    b2: 0,
+    b3: 0,
+
+    bo1: 0,
+    bo2: 0,
+    bo3: 0,
+
+    inputField: {
+        re: 0,
+        im: 0
+    },
+
+    hidden1: 0,
+    hidden2: 0,
+    hidden3: 0,
+
+    left: 0,
+    right: 0,
+    stay: 0,
+
+    control: 0,
+    targetY: WORLD_H / 2,
+
+    reward: 0,
+
+    inferences: 0,
+    updates: 0
+};
+
+
+/* ============================================================
+   COMPLEX NUMBERS
+============================================================ */
+
+function C(re, im) {
+    return {
+        re,
+        im
+    };
+}
+
+function cAdd(a, b) {
+    return C(
+        a.re + b.re,
+        a.im + b.im
+    );
+}
+
+function cMul(a, b) {
+    return C(
+        a.re * b.re -
+        a.im * b.im,
+
+        a.re * b.im +
+        a.im * b.re
+    );
+}
+
+function cConj(a) {
+    return C(
+        a.re,
+        -a.im
+    );
+}
+
+function cExp(p) {
+    return C(
+        Math.cos(p),
+        Math.sin(p)
+    );
+}
+
+function cAbs2(a) {
+    return (
+        a.re * a.re +
+        a.im * a.im
+    );
+}
+
+
+/* ============================================================
+   HELPERS
+============================================================ */
+
+function clamp(x, lo, hi) {
+    return Math.max(
+        lo,
+        Math.min(
+            hi,
+            x
+        )
+    );
+}
+
+function normalize(x, scale) {
+
+    if (scale === 0) {
+        return 0;
+    }
+
+    return clamp(
+        x / scale,
+        -1,
+        1
+    );
+}
+
+
+/* ============================================================
+   COHERENT DETECTOR
+============================================================ */
+
+function detector(
+    field,
+    referencePhase
+) {
+
+    const ref =
+        cExp(
+            referencePhase
+        );
+
+    ref.re *=
+        REFERENCE_AMPLITUDE;
+
+    ref.im *=
+        REFERENCE_AMPLITUDE;
+
+    const plus =
+        cAdd(
+            field,
+            ref
+        );
+
+    const minus =
+        cAdd(
+            field,
+            C(
+                -ref.re,
+                -ref.im
+            )
+        );
+
+    return (
+        cAbs2(plus) -
+        cAbs2(minus)
+    ) / 4;
+}
+
+
+/* ============================================================
+   ONE COMPLEX OPTICAL FIELD
+============================================================ */
+
+function encodeProblemAsOneField() {
+
+    const ballY =
+        normalize(
+            game.ballY -
+            WORLD_H / 2,
+            WORLD_H
+        );
+
+    const aiError =
+        normalize(
+            game.ballY -
+            game.aiY,
+            WORLD_H
+        );
+
+    const playerError =
+        normalize(
+            game.ballY -
+            game.playerY,
+            WORLD_H
+        );
+
+    const vx =
+        normalize(
+            game.vx,
+            1.5
+        );
+
+    const vy =
+        normalize(
+            game.vy,
+            1.5
+        );
+
+    const phase =
+        1.10 * ballY +
+        0.45 * aiError +
+        0.90 * playerError +
+        0.70 * vx +
+        0.25 * vy;
+
+    const amplitude =
+        1 +
+        0.12 *
+        Math.cos(
+            phase
+        );
+
+    const field =
+        cMul(
+            C(
+                amplitude,
+                0
+            ),
+            cExp(
+                phase
+            )
+        );
+
+    brain.inputField =
+        field;
+
+    return field;
+}
+
+
+/* ============================================================
+   OPTICAL LAYER 1
+============================================================ */
+
+function opticalLayer1(field) {
+
+    const e11 =
+        cMul(
+            field,
+            cExp(
+                brain.w1 * K
+            )
+        );
+
+    const e12 =
+        cMul(
+            cConj(field),
+            cExp(
+                brain.w2 * K
+            )
+        );
+
+    const e13 =
+        cMul(
+            field,
+            cExp(
+                -brain.w3 * K
+            )
+        );
+
+    const h1 =
+        cAdd(
+            cAdd(
+                e11,
+                e12
+            ),
+            cAdd(
+                e13,
+                C(
+                    brain.b1,
+                    0
+                )
+            )
+        );
+
+
+    const e21 =
+        cMul(
+            field,
+            cExp(
+                brain.w6 * K
+            )
+        );
+
+    const e22 =
+        cMul(
+            cConj(field),
+            cExp(
+                brain.w7 * K
+            )
+        );
+
+    const e23 =
+        cMul(
+            field,
+            cExp(
+                -brain.w8 * K
+            )
+        );
+
+    const h2 =
+        cAdd(
+            cAdd(
+                e21,
+                e22
+            ),
+            cAdd(
+                e23,
+                C(
+                    brain.b2,
+                    0
+                )
+            )
+        );
+
+
+    const e31 =
+        cMul(
+            field,
+            cExp(
+                brain.w11 * K
+            )
+        );
+
+    const e32 =
+        cMul(
+            cConj(field),
+            cExp(
+                brain.w12 * K
+            )
+        );
+
+    const e33 =
+        cMul(
+            field,
+            cExp(
+                -brain.w13 * K
+            )
+        );
+
+    const h3 =
+        cAdd(
+            cAdd(
+                e31,
+                e32
+            ),
+            cAdd(
+                e33,
+                C(
+                    brain.b3,
+                    0
+                )
+            )
+        );
+
+
+    const d1 =
+        Math.max(
+            0,
+            detector(
+                h1,
+                0
+            )
+        );
+
+    const d2 =
+        Math.max(
+            0,
+            detector(
+                h2,
+                Math.PI / 2
+            )
+        );
+
+    const d3 =
+        Math.max(
+            0,
+            detector(
+                h3,
+                Math.PI
+            )
+        );
+
+
+    brain.hidden1 = d1;
+    brain.hidden2 = d2;
+    brain.hidden3 = d3;
+
+    return [
+        d1,
+        d2,
+        d3
+    ];
+}
+
+
+/* ============================================================
+   OPTICAL LAYER 2
+============================================================ */
+
+function opticalLayer2(
+    h1,
+    h2,
+    h3
+) {
+
+    const f1 = C(
+        h1,
+        0
+    );
+
+    const f2 = C(
+        h2,
+        0
+    );
+
+    const f3 = C(
+        h3,
+        0
+    );
+
+
+    const leftField =
+        cAdd(
+            cAdd(
+                cMul(
+                    f1,
+                    cExp(
+                        brain.o1 * K
+                    )
+                ),
+                cMul(
+                    f2,
+                    cExp(
+                        brain.o2 * K
+                    )
+                )
+            ),
+            cAdd(
+                cMul(
+                    f3,
+                    cExp(
+                        brain.o3 * K
+                    )
+                ),
+                C(
+                    brain.bo1,
+                    0
+                )
+            )
+        );
+
+
+    const rightField =
+        cAdd(
+            cAdd(
+                cMul(
+                    f1,
+                    cExp(
+                        brain.o4 * K
+                    )
+                ),
+                cMul(
+                    f2,
+                    cExp(
+                        brain.o5 * K
+                    )
+                )
+            ),
+            cAdd(
+                cMul(
+                    f3,
+                    cExp(
+                        brain.o6 * K
+                    )
+                ),
+                C(
+                    brain.bo2,
+                    0
+                )
+            )
+        );
+
+
+    const stayField =
+        cAdd(
+            cAdd(
+                cMul(
+                    f1,
+                    cExp(
+                        brain.o7 * K
+                    )
+                ),
+                cMul(
+                    f2,
+                    cExp(
+                        brain.o8 * K
+                    )
+                )
+            ),
+            cAdd(
+                cMul(
+                    f3,
+                    cExp(
+                        brain.o9 * K
+                    )
+                ),
+                C(
+                    brain.bo3,
+                    0
+                )
+            )
+        );
+
+
+    brain.left =
+        detector(
+            leftField,
+            0
+        ) + 1;
+
+    brain.right =
+        detector(
+            rightField,
+            Math.PI
+        ) + 1;
+
+    brain.stay =
+        detector(
+            stayField,
+            Math.PI / 2
+        ) + 1;
+
+
+    return [
+        brain.left,
+        brain.right,
+        brain.stay
+    ];
+}
+
+
+/* ============================================================
+   PREDICT AI TARGET
+============================================================ */
+
+function predictTargetY() {
+
+    const targetX =
+        AI_X - 1;
+
+    /*
+     * If ball is moving away,
+     * keep optical target near ball.
+     */
+
+    if (
+        game.vx <= 0
+    ) {
+
+        return clamp(
+            game.ballY,
+            PADDLE_H / 2,
+            WORLD_H -
+            PADDLE_H / 2
+        );
+    }
+
+
+    const distance =
+        (
+            targetX -
+            game.ballX
+        ) /
+        game.vx;
+
+
+    if (
+        distance <= 0 ||
+        !Number.isFinite(distance)
+    ) {
+
+        return clamp(
+            game.ballY,
+            PADDLE_H / 2,
+            WORLD_H -
+            PADDLE_H / 2
+        );
+    }
+
+
+    let predicted =
+        game.ballY +
+        game.vy *
+        distance;
+
+
+    /*
+     * Reflect the predicted point
+     * against the top/bottom boundaries.
+     */
+
+    const minY = 1;
+    const maxY =
+        WORLD_H - 1;
+
+    const range =
+        maxY - minY;
+
+    let p =
+        predicted -
+        minY;
+
+    p =
+        (
+            (
+                p %
+                (2 * range)
+            )
+            +
+            (2 * range)
+        )
+        %
+        (2 * range);
+
+
+    if (
+        p > range
+    ) {
+
+        p =
+            2 * range -
+            p;
+    }
+
+
+    predicted =
+        minY +
+        p;
+
+
+    return clamp(
+        predicted,
+        PADDLE_H / 2,
+        WORLD_H -
+        PADDLE_H / 2
+    );
+}
+
+
+/* ============================================================
+   OPTICAL FORWARD
+============================================================ */
+
+function opticalForward() {
+
+    const field =
+        encodeProblemAsOneField();
+
+
+    const hidden =
+        opticalLayer1(
+            field
+        );
+
+
+    opticalLayer2(
+        hidden[0],
+        hidden[1],
+        hidden[2]
+    );
+
+
+    brain.targetY =
+        predictTargetY();
+
+
+    const neuralSignal =
+        (
+            brain.right -
+            brain.left
+        )
+        /
+        (
+            brain.left +
+            brain.right +
+            1e-9
+        );
+
+
+    const targetSignal =
+        clamp(
+            (
+                brain.targetY -
+                game.aiY
+            )
+            /
+            (
+                WORLD_H * 0.18
+            ),
+            -1,
+            1
+        );
+
+
+    brain.control =
+        clamp(
+            0.80 *
+            targetSignal
+            +
+            0.20 *
+            neuralSignal,
+            -1,
+            1
+        );
+
+
+    brain.inferences++;
+
+    return brain.control;
+}
+
+
+/* ============================================================
+   ONLINE OPTICAL LEARNING
+============================================================ */
+
+function opticalLearn() {
+
+    const reward =
+        clamp(
+            brain.reward,
+            -1,
+            1
+        );
+
+
+    if (
+        Math.abs(reward) <
+        1e-12
+    ) {
+        return;
+    }
+
+
+    const directional =
+        clamp(
+            (
+                brain.right -
+                brain.left
+            )
+            /
+            (
+                brain.left +
+                brain.right +
+                1e-9
+            ),
+            -1,
+            1
+        );
+
+
+    const step =
+        LEARNING_RATE *
+        reward *
+        directional;
+
+
+    brain.o1 +=
+        step *
+        brain.hidden1 *
+        0.20;
+
+    brain.o2 +=
+        step *
+        brain.hidden2 *
+        0.20;
+
+    brain.o4 -=
+        step *
+        brain.hidden1 *
+        0.20;
+
+    brain.o5 -=
+        step *
+        brain.hidden2 *
+        0.20;
+
+    brain.o7 +=
+        step *
+        brain.hidden3 *
+        0.08;
+
+
+    const hiddenStep =
+        LEARNING_RATE *
+        reward *
+        0.15;
+
+
+    brain.w1 +=
+        hiddenStep *
+        brain.hidden1;
+
+    brain.w7 -=
+        hiddenStep *
+        brain.hidden2;
+
+    brain.w13 +=
+        hiddenStep *
+        brain.hidden3;
+
+
+    const names = [
+        "w1","w2","w3","w4","w5",
+        "w6","w7","w8","w9","w10",
+        "w11","w12","w13","w14","w15",
+        "o1","o2","o3","o4","o5",
+        "o6","o7","o8","o9"
+    ];
+
+
+    for (
+        const name of names
+    ) {
+
+        brain[name] =
+            clamp(
+                brain[name],
+                -WEIGHT_LIMIT,
+                WEIGHT_LIMIT
+            );
+    }
+
+
+    brain.updates++;
+    brain.reward = 0;
+}
+
+
+/* ============================================================
+   SWEPT PLAYER COLLISION
+============================================================ */
+
+function collideWithPlayerPaddle(
+    previousX,
+    previousY
+) {
+
+    if (
+        game.vx >= 0
+    ) {
+        return false;
+    }
+
+
+    const paddleX =
+        PLAYER_X + 1;
+
+
+    const currentX =
+        game.ballX;
+
+    const currentY =
+        game.ballY;
+
+
+    const dx =
+        currentX -
+        previousX;
+
+
+    if (
+        Math.abs(dx) < 1e-12
+    ) {
+        return false;
+    }
+
+
+    const crossed =
+        previousX > paddleX &&
+        currentX <= paddleX;
+
+
+    if (!crossed) {
+        return false;
+    }
+
+
+    const t =
+        (
+            paddleX -
+            previousX
+        )
+        /
+        dx;
+
+
+    if (
+        t < 0 ||
+        t > 1
+    ) {
+        return false;
+    }
+
+
+    const hitY =
+        previousY +
+        (
+            currentY -
+            previousY
+        ) *
+        t;
+
+
+    const top =
+        game.playerY -
+        PADDLE_H / 2;
+
+    const bottom =
+        game.playerY +
+        PADDLE_H / 2;
+
+
+    if (
+        hitY < top ||
+        hitY > bottom
+    ) {
+
+        return false;
+    }
+
+
+    game.ballX =
+        paddleX;
+
+
+    const relative =
+        clamp(
+            (
+                hitY -
+                game.playerY
+            )
+            /
+            (
+                PADDLE_H / 2
+            ),
+            -1,
+            1
+        );
+
+
+    const speed =
+        Math.sqrt(
+            game.vx *
+            game.vx
+            +
+            game.vy *
+            game.vy
+        );
+
+
+    const angle =
+        relative *
+        Math.PI *
+        0.38;
+
+
+    game.vx =
+        Math.abs(
+            speed *
+            Math.cos(angle)
+        );
+
+    game.vy =
+        speed *
+        Math.sin(angle);
+
+
+    return true;
+}
+
+
+/* ============================================================
+   SWEPT AI COLLISION
+============================================================ */
+
+function collideWithAIPaddle(
+    previousX,
+    previousY
+) {
+
+    if (
+        game.vx <= 0
+    ) {
+        return false;
+    }
+
+
+    const paddleX =
+        AI_X - 1;
+
+
+    const currentX =
+        game.ballX;
+
+    const currentY =
+        game.ballY;
+
+
+    const dx =
+        currentX -
+        previousX;
+
+
+    if (
+        Math.abs(dx) < 1e-12
+    ) {
+        return false;
+    }
+
+
+    const crossed =
+        previousX < paddleX &&
+        currentX >= paddleX;
+
+
+    if (!crossed) {
+        return false;
+    }
+
+
+    /*
+     * Exact interpolation
+     * between previous and current
+     * ball positions.
+     */
+
+    const t =
+        (
+            paddleX -
+            previousX
+        )
+        /
+        dx;
+
+
+    if (
+        t < 0 ||
+        t > 1
+    ) {
+        return false;
+    }
+
+
+    /*
+     * Exact point of contact.
+     */
+
+    const hitY =
+        previousY +
+        (
+            currentY -
+            previousY
+        )
+        *
+        t;
+
+
+    const top =
+        game.aiY -
+        PADDLE_H / 2;
+
+    const bottom =
+        game.aiY +
+        PADDLE_H / 2;
+
+
+    /*
+     * Ball touched the
+     * paddle's vertical range.
+     */
+
+    if (
+        hitY < top ||
+        hitY > bottom
+    ) {
+
+        return false;
+    }
+
+
+    /*
+     * Snap ball to exact
+     * collision plane.
+     */
+
+    game.ballX =
+        paddleX;
+
+
+    /*
+     * Hit position relative
+     * to paddle center.
+     */
+
+    const relative =
+        clamp(
+            (
+                hitY -
+                game.aiY
+            )
+            /
+            (
+                PADDLE_H / 2
+            ),
+            -1,
+            1
+        );
+
+
+    /*
+     * Preserve speed.
+     */
+
+    const speed =
+        Math.sqrt(
+            game.vx *
+            game.vx
+            +
+            game.vy *
+            game.vy
+        );
+
+
+    /*
+     * Pong reflection angle.
+     */
+
+    const maxAngle =
+        Math.PI * 0.38;
+
+
+    const angle =
+        relative *
+        maxAngle;
+
+
+    /*
+     * Reverse X and alter Y
+     * according to hit position.
+     */
+
+    game.vx =
+        -Math.abs(
+            speed *
+            Math.cos(angle)
+        );
+
+    game.vy =
+        speed *
+        Math.sin(angle);
+
+
+    /*
+     * Reward successful optical
+     * paddle interaction.
+     */
+
+    brain.reward +=
+        0.15;
+
+
+    return true;
+}
+
+
+/* ============================================================
+   RESET BALL
+============================================================ */
+
+function resetBall(direction) {
+
+    game.ballX =
+        WORLD_W / 2;
+
+    game.ballY =
+        WORLD_H / 2;
+
+
+    game.vx =
+        direction *
+        0.88;
+
+
+    game.vy =
+        (
+            Math.random() -
+            0.5
+        ) *
+        0.75;
+}
+
+
+/* ============================================================
+   PONG PHYSICS
+============================================================ */
+
+function stepPong() {
+
+    /*
+     * HUMAN INPUT
+     */
+
+    let playerDirection = 0;
+
+
+    if (
+        keys["w"] ||
+        keys["W"] ||
+        keys["ArrowUp"]
+    ) {
+
+        playerDirection -= 1;
+    }
+
+
+    if (
+        keys["s"] ||
+        keys["S"] ||
+        keys["ArrowDown"]
+    ) {
+
+        playerDirection += 1;
+    }
+
+
+    game.playerY +=
+        playerDirection *
+        PADDLE_SPEED;
+
+
+    game.playerY =
+        clamp(
+            game.playerY,
+            PADDLE_H / 2,
+            WORLD_H -
+            PADDLE_H / 2
+        );
+
+
+    /*
+     * OPTICAL AI
+     */
+
+    const control =
+        opticalForward();
+
+
+    game.aiY +=
+        control *
+        PADDLE_SPEED;
+
+
+    game.aiY =
+        clamp(
+            game.aiY,
+            PADDLE_H / 2,
+            WORLD_H -
+            PADDLE_H / 2
+        );
+
+
+    /*
+     * IMPORTANT:
+     * Save exact previous point
+     * before moving ball.
+     */
+
+    const previousX =
+        game.ballX;
+
+    const previousY =
+        game.ballY;
+
+
+    /*
+     * MOVE BALL
+     */
+
+    game.ballX +=
+        game.vx;
+
+    game.ballY +=
+        game.vy;
+
+
+    /*
+     * TOP
+     */
+
+    if (
+        game.ballY <= 1
+    ) {
+
+        game.ballY =
+            1;
+
+        game.vy =
+            Math.abs(
+                game.vy
+            );
+    }
+
+
+    /*
+     * BOTTOM
+     */
+
+    if (
+        game.ballY >=
+        WORLD_H - 1
+    ) {
+
+        game.ballY =
+            WORLD_H - 1;
+
+        game.vy =
+            -Math.abs(
+                game.vy
+            );
+    }
+
+
+    /*
+     * EXACT HUMAN COLLISION
+     */
+
+    collideWithPlayerPaddle(
+        previousX,
+        previousY
+    );
+
+
+    /*
+     * EXACT OPTICAL AI COLLISION
+     */
+
+    collideWithAIPaddle(
+        previousX,
+        previousY
+    );
+
+
+    /*
+     * HUMAN SCORES
+     */
+
+    if (
+        game.ballX >=
+        WORLD_W
+    ) {
+
+        game.playerScore++;
+
+        brain.reward -=
+            1;
+
+        opticalLearn();
+
+        resetBall(-1);
+
+        log(
+            "HUMAN SCORED"
+        );
+
+        return;
+    }
+
+
+    /*
+     * AI SCORES
+     */
+
+    if (
+        game.ballX <= 0
+    ) {
+
+        game.aiScore++;
+
+        brain.reward +=
+            1;
+
+        opticalLearn();
+
+        resetBall(1);
+
+        log(
+            "OPTICAL AI SCORED"
+        );
+
+        return;
+    }
+
+
+    /*
+     * Local optical reward.
+     */
+
+    const targetError =
+        Math.abs(
+            game.aiY -
+            brain.targetY
+        );
+
+
+    if (
+        targetError < 2
+    ) {
+
+        brain.reward +=
+            0.001;
+    }
+
+
+    if (
+        Math.abs(
+            brain.reward
+        ) > 0.05
+    ) {
+
+        opticalLearn();
+    }
+}
+
+
+/* ============================================================
+   DOM
+============================================================ */
+
+const gameCanvas =
+    document.getElementById(
+        "gameCanvas"
+    );
+
+const gameCtx =
+    gameCanvas.getContext(
+        "2d"
+    );
+
+
+const opticalCanvas =
+    document.getElementById(
+        "opticalCanvas"
+    );
+
+const opticalCtx =
+    opticalCanvas.getContext(
+        "2d"
+    );
+
+
+const logEl =
+    document.getElementById(
+        "log"
+    );
+
+
+/* ============================================================
+   DRAW GAME
+============================================================ */
+
+function drawGame() {
+
+    const w =
+        gameCanvas.width;
+
+    const h =
+        gameCanvas.height;
+
+
+    gameCtx.fillStyle =
+        "#02050b";
+
+    gameCtx.fillRect(
+        0,
+        0,
+        w,
+        h
+    );
+
+
+    /*
+     * Midline
+     */
+
+    gameCtx.strokeStyle =
+        "#1a2b45";
+
+    gameCtx.setLineDash([
+        8,
+        10
+    ]);
+
+    gameCtx.beginPath();
+
+    gameCtx.moveTo(
+        w / 2,
+        0
+    );
+
+    gameCtx.lineTo(
+        w / 2,
+        h
+    );
+
+    gameCtx.stroke();
+
+    gameCtx.setLineDash([]);
+
+
+    const sx =
+        w /
+        WORLD_W;
+
+    const sy =
+        h /
+        WORLD_H;
+
+
+    /*
+     * Human paddle
+     */
+
+    gameCtx.fillStyle =
+        "#55e8ff";
+
+    gameCtx.fillRect(
+        (
+            PLAYER_X -
+            PADDLE_W
+        ) * sx,
+
+        (
+            game.playerY -
+            PADDLE_H / 2
+        ) * sy,
+
+        PADDLE_W * sx,
+        PADDLE_H * sy
+    );
+
+
+    /*
+     * Optical paddle
+     */
+
+    gameCtx.fillStyle =
+        "#6cf5a4";
+
+    gameCtx.fillRect(
+        AI_X * sx,
+
+        (
+            game.aiY -
+            PADDLE_H / 2
+        ) * sy,
+
+        PADDLE_W * sx,
+        PADDLE_H * sy
+    );
+
+
+    /*
+     * Ball
+     */
+
+    gameCtx.beginPath();
+
+    gameCtx.arc(
+        game.ballX * sx,
+        game.ballY * sy,
+        6,
+        0,
+        Math.PI * 2
+    );
+
+    gameCtx.fillStyle =
+        "#ffffff";
+
+    gameCtx.fill();
+
+
+    /*
+     * Optical target
+     */
+
+    gameCtx.beginPath();
+
+    gameCtx.arc(
+        AI_X * sx,
+        brain.targetY * sy,
+        8,
+        0,
+        Math.PI * 2
+    );
+
+    gameCtx.strokeStyle =
+        "#ff6477";
+
+    gameCtx.lineWidth =
+        2;
+
+    gameCtx.stroke();
+
+
+    /*
+     * Target displacement
+     */
+
+    gameCtx.beginPath();
+
+    gameCtx.moveTo(
+        AI_X * sx,
+        game.aiY * sy
+    );
+
+    gameCtx.lineTo(
+        AI_X * sx,
+        brain.targetY * sy
+    );
+
+    gameCtx.strokeStyle =
+        "rgba(255,100,119,.55)";
+
+    gameCtx.stroke();
+
+
+    /*
+     * Score
+     */
+
+    gameCtx.font =
+        "bold 28px Consolas";
+
+    gameCtx.fillStyle =
+        "#9bb0cd";
+
+    gameCtx.fillText(
+        `${game.playerScore} : ${game.aiScore}`,
+        w / 2 - 42,
+        35
+    );
+
+
+    /*
+     * Labels
+     */
+
+    gameCtx.font =
+        "bold 13px Consolas";
+
+    gameCtx.fillStyle =
+        "#55e8ff";
+
+    gameCtx.fillText(
+        "HUMAN",
+        25,
+        28
+    );
+
+
+    gameCtx.fillStyle =
+        "#6cf5a4";
+
+    gameCtx.fillText(
+        "OPTICAL AI",
+        w - 105,
+        28
+    );
+}
+
+
+/* ============================================================
+   DRAW OPTICAL
+============================================================ */
+
+function drawOptical() {
+
+    const w =
+        opticalCanvas.width;
+
+    const h =
+        opticalCanvas.height;
+
+
+    opticalCtx.fillStyle =
+        "#02050b";
+
+    opticalCtx.fillRect(
+        0,
+        0,
+        w,
+        h
+    );
+
+
+    const cx =
+        w / 2;
+
+    const cy =
+        135;
+
+
+    /*
+     * One complex field
+     */
+
+    const phase =
+        Math.atan2(
+            brain.inputField.im,
+            brain.inputField.re
+        );
+
+
+    const amplitude =
+        Math.min(
+            1,
+            Math.sqrt(
+                cAbs2(
+                    brain.inputField
+                )
+            ) /
+            2
+        );
+
+
+    const radius =
+        38 +
+        amplitude * 105;
+
+
+    opticalCtx.beginPath();
+
+    opticalCtx.arc(
+        cx,
+        cy,
+        radius,
+        0,
+        Math.PI * 2
+    );
+
+    opticalCtx.strokeStyle =
+        `hsla(${
+            (phase + Math.PI) *
+            57.3
+        },100%,65%,.9)`;
+
+    opticalCtx.lineWidth =
+        8;
+
+    opticalCtx.stroke();
+
+
+    /*
+     * Wave rings
+     */
+
+    for (
+        let i = 1;
+        i <= 3;
+        i++
+    ) {
+
+        opticalCtx.beginPath();
+
+        opticalCtx.arc(
+            cx,
+            cy,
+            radius +
+            i * 20,
+            0,
+            Math.PI * 2
+        );
+
+        opticalCtx.strokeStyle =
+            "rgba(70,145,255,.18)";
+
+        opticalCtx.stroke();
+    }
+
+
+    /*
+     * Hidden nodes
+     */
+
+    const hidden = [
+        brain.hidden1,
+        brain.hidden2,
+        brain.hidden3
+    ];
+
+
+    hidden.forEach(
+        function(
+            value,
+            i
+        ) {
+
+            const x =
+                95 +
+                i * 160;
+
+            const y =
+                300;
+
+            const r =
+                20 +
+                Math.min(
+                    42,
+                    value * 10
+                );
+
+
+            opticalCtx.beginPath();
+
+            opticalCtx.arc(
+                x,
+                y,
+                r,
+                0,
+                Math.PI * 2
+            );
+
+            opticalCtx.fillStyle =
+                "rgba(72,160,255,.18)";
+
+            opticalCtx.fill();
+
+            opticalCtx.strokeStyle =
+                "#73a1ff";
+
+            opticalCtx.lineWidth =
+                2;
+
+            opticalCtx.stroke();
+
+
+            opticalCtx.fillStyle =
+                "#b9c9df";
+
+            opticalCtx.font =
+                "12px Consolas";
+
+            opticalCtx.textAlign =
+                "center";
+
+            opticalCtx.fillText(
+                `H${i + 1}`,
+                x,
+                y + 4
+            );
+        }
+    );
+
+
+    /*
+     * Detector bars
+     */
+
+    const values = [
+        brain.left,
+        brain.right,
+        brain.stay
+    ];
+
+    const labels = [
+        "LEFT",
+        "RIGHT",
+        "STAY"
+    ];
+
+
+    values.forEach(
+        function(
+            value,
+            i
+        ) {
+
+            const x =
+                55 +
+                i * 145;
+
+            const bar =
+                Math.min(
+                    110,
+                    value * 28
+                );
+
+
+            opticalCtx.fillStyle =
+                "#5e94ff";
+
+            opticalCtx.fillRect(
+                x,
+                470 - bar,
+                80,
+                bar
+            );
+
+
+            opticalCtx.fillStyle =
+                "#9cafc9";
+
+            opticalCtx.font =
+                "11px Consolas";
+
+            opticalCtx.textAlign =
+                "center";
+
+            opticalCtx.fillText(
+                labels[i],
+                x + 40,
+                490
+            );
+        }
+    );
+
+
+    opticalCtx.fillStyle =
+        "#93a7c2";
+
+    opticalCtx.font =
+        "12px Consolas";
+
+    opticalCtx.textAlign =
+        "center";
+
+    opticalCtx.fillText(
+        "ONE COMPLEX OPTICAL FIELD",
+        cx,
+        30
+    );
+
+    opticalCtx.fillText(
+        "PHASE / INTERFERENCE",
+        cx,
+        215
+    );
+
+    opticalCtx.fillText(
+        "3 OPTICAL HIDDEN NODES",
+        cx,
+        265
+    );
+
+    opticalCtx.fillText(
+        "3 OPTICAL DETECTORS",
+        cx,
+        420
+    );
+}
+
+
+/* ============================================================
+   UI
+============================================================ */
+
+function setActiveStage(index) {
+
+    for (
+        let i = 0;
+        i < 9;
+        i++
+    ) {
+
+        const node =
+            document.getElementById(
+                "n" + i
+            );
+
+        node.classList.toggle(
+            "active",
+            i === index
+        );
+    }
+}
+
+
+let visualStage = 0;
+
+function updatePipeline() {
+
+    setActiveStage(
+        visualStage
+    );
+
+    visualStage =
+        (
+            visualStage +
+            1
+        ) % 9;
+}
+
+
+function updateUI() {
+
+    document.getElementById(
+        "scoreValue"
+    ).textContent =
+        `${game.playerScore} : ${game.aiScore}`;
+
+
+    document.getElementById(
+        "playerValue"
+    ).textContent =
+        game.playerY.toFixed(2);
+
+
+    document.getElementById(
+        "aiValue"
+    ).textContent =
+        game.aiY.toFixed(2);
+
+
+    document.getElementById(
+        "targetValue"
+    ).textContent =
+        brain.targetY.toFixed(2);
+
+
+    document.getElementById(
+        "ballValue"
+    ).textContent =
+        `${game.ballX.toFixed(2)} / ` +
+        `${game.ballY.toFixed(2)}`;
+
+
+    let action =
+        "STAY";
+
+
+    if (
+        brain.left >
+        brain.right &&
+        brain.left >
+        brain.stay
+    ) {
+
+        action =
+            "LEFT";
+
+    } else if (
+        brain.right >
+        brain.left &&
+        brain.right >
+        brain.stay
+    ) {
+
+        action =
+            "RIGHT";
+    }
+
+
+    document.getElementById(
+        "actionValue"
+    ).textContent =
+        action;
+
+
+    document.getElementById(
+        "fieldValue"
+    ).textContent =
+        `${brain.inputField.re.toFixed(3)} ` +
+        `${brain.inputField.im >= 0 ? "+" : ""}` +
+        `${brain.inputField.im.toFixed(3)}i`;
+
+
+    document.getElementById(
+        "hiddenValue"
+    ).textContent =
+        `${brain.hidden1.toFixed(3)} / ` +
+        `${brain.hidden2.toFixed(3)} / ` +
+        `${brain.hidden3.toFixed(3)}`;
+
+
+    document.getElementById(
+        "leftValue"
+    ).textContent =
+        brain.left.toFixed(3);
+
+
+    document.getElementById(
+        "rightValue"
+    ).textContent =
+        brain.right.toFixed(3);
+
+
+    document.getElementById(
+        "stayValue"
+    ).textContent =
+        brain.stay.toFixed(3);
+
+
+    document.getElementById(
+        "inferenceValue"
+    ).textContent =
+        brain.inferences.toLocaleString();
+
+
+    document.getElementById(
+        "updateValue"
+    ).textContent =
+        brain.updates.toLocaleString();
+
+
+    document.getElementById(
+        "rewardValue"
+    ).textContent =
+        brain.reward.toFixed(4);
+}
+
+
+/* ============================================================
+   LOG
+============================================================ */
+
+function log(message) {
+
+    const line =
+        document.createElement(
+            "div"
+        );
+
+    line.textContent =
+        "[" +
+        new Date().toLocaleTimeString() +
+        "] " +
+        message;
+
+    logEl.appendChild(
+        line
+    );
+
+    logEl.scrollTop =
+        logEl.scrollHeight;
+}
+
+
+/* ============================================================
+   KEYBOARD
+============================================================ */
+
+const keys = Object.create(null);
+
+window.addEventListener(
+    "keydown",
+    function(event) {
+
+        keys[event.key] =
+            true;
+
+        if (
+            event.key === "ArrowUp" ||
+            event.key === "ArrowDown"
+        ) {
+
+            event.preventDefault();
+        }
+    }
+);
+
+window.addEventListener(
+    "keyup",
+    function(event) {
+
+        keys[event.key] =
+            false;
+    }
+);
+
+
+/* ============================================================
+   LOOP
+============================================================ */
+
+let animationFrame =
+    null;
+
+
+function gameLoop() {
+
+    if (
+        !game.running ||
+        game.paused
+    ) {
+        return;
+    }
+
+
+    stepPong();
+
+    drawGame();
+    drawOptical();
+    updateUI();
+    updatePipeline();
+
+
+    animationFrame =
+        requestAnimationFrame(
+            gameLoop
+        );
+}
+
+
+/* ============================================================
+   RESET
+============================================================ */
+
+function resetGame() {
+
+    game.playerY =
+        WORLD_H / 2;
+
+    game.aiY =
+        WORLD_H / 2;
+
+    game.ballX =
+        WORLD_W / 2;
+
+    game.ballY =
+        WORLD_H / 2;
+
+    game.vx =
+        0.88;
+
+    game.vy =
+        0.32;
+
+    game.playerScore =
+        0;
+
+    game.aiScore =
+        0;
+
+    game.running =
+        false;
+
+    game.paused =
+        false;
+
+
+    brain.inputField =
+        C(
+            0,
+            0
+        );
+
+    brain.hidden1 =
+        0;
+
+    brain.hidden2 =
+        0;
+
+    brain.hidden3 =
+        0;
+
+    brain.left =
+        0;
+
+    brain.right =
+        0;
+
+    brain.stay =
+        0;
+
+    brain.control =
+        0;
+
+    brain.targetY =
+        WORLD_H / 2;
+
+    brain.reward =
+        0;
+
+    brain.inferences =
+        0;
+
+    brain.updates =
+        0;
+
+
+    visualStage =
+        0;
+
+
+    drawGame();
+    drawOptical();
+    updateUI();
+    setActiveStage(-1);
+}
+
+
+/* ============================================================
+   BUTTONS
+============================================================ */
+
+const startBtn =
+    document.getElementById(
+        "startBtn"
+    );
+
+const pauseBtn =
+    document.getElementById(
+        "pauseBtn"
+    );
+
+const resetBtn =
+    document.getElementById(
+        "resetBtn"
+    );
+
+
+startBtn.addEventListener(
+    "click",
+    function() {
+
+        if (
+            game.running
+        ) {
+            return;
+        }
+
+        game.running =
+            true;
+
+        game.paused =
+            false;
+
+        startBtn.disabled =
+            true;
+
+        pauseBtn.textContent =
+            "PAUSE";
+
+
+        log(
+            "HUMAN VS OPTICAL AI STARTED"
+        );
+
+        log(
+            "PLAYER: W / S / ARROW KEYS"
+        );
+
+        log(
+            "OPTICAL AI: ONLINE"
+        );
+
+        log(
+            "ONE COMPLEX FIELD: ONLINE"
+        );
+
+        log(
+            "OPTICAL LAYER 1: ONLINE"
+        );
+
+        log(
+            "HIDDEN NODES: 3"
+        );
+
+        log(
+            "OPTICAL LAYER 2: ONLINE"
+        );
+
+        log(
+            "DETECTORS: LEFT / RIGHT / STAY"
+        );
+
+        log(
+            "SWEPT COLLISION: ENABLED"
+        );
+
+        log(
+            "ONLINE OPTICAL LEARNING: ON"
+        );
+
+
+        gameLoop();
+    }
+);
+
+
+pauseBtn.addEventListener(
+    "click",
+    function() {
+
+        if (
+            !game.running
+        ) {
+            return;
+        }
+
+        game.paused =
+            !game.paused;
+
+        pauseBtn.textContent =
+            game.paused
+                ? "RESUME"
+                : "PAUSE";
+
+
+        if (
+            !game.paused
+        ) {
+
+            gameLoop();
+        }
+    }
+);
+
+
+resetBtn.addEventListener(
+    "click",
+    function() {
+
+        game.running =
+            false;
+
+        if (
+            animationFrame !== null
+        ) {
+
+            cancelAnimationFrame(
+                animationFrame
+            );
+
+            animationFrame =
+                null;
+        }
+
+        startBtn.disabled =
+            false;
+
+        pauseBtn.textContent =
+            "PAUSE";
+
+
+        resetGame();
+
+        log(
+            "GAME RESET"
+        );
+    }
+);
+
+
+/* ============================================================
+   INITIALIZATION
+============================================================ */
+
+log(
+    "STATIC BROWSER DEMO READY"
+);
+
+log(
+    "NO PYTHON REQUIRED"
+);
+
+log(
+    "NO EXTERNAL JAVASCRIPT LIBRARIES"
+);
+
+log(
+    "HUMAN vs OPTICAL NEURAL COMPUTER"
+);
+
+log(
+    "SWEPT COLLISION ENABLED"
+);
+
+resetGame();
+
+})();
+</script>
+
+</body>
+</html>
