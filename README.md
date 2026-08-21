@@ -1,9 +1,10 @@
-# Optical Neural Pong
+# Optical Neural Breakout
 
-**Human vs Optical Neural Computer**
+**Standalone Browser Optical Computing Game**
 
-브라우저에서 바로 실행되는 단일 파일 기반 광학 신경망 Pong 게임입니다.
-사람은 왼쪽 패들을 조작하고, 오른쪽 패들은 **하나의 복소 광학장 → 광학 위상 변조 → 간섭 → 3개 Hidden Optical Nodes → 3개 Optical Detectors → Action** 흐름으로 제어됩니다.
+**EN:** Optical Neural Breakout is a browser-based numerical optical-computing game that combines a Breakout environment with a single complex optical field, phase modulation, interference, optical hidden nodes, optical detection, and online optical parameter updates.
+
+**KR:** Optical Neural Breakout은 Breakout 게임 환경에 하나의 복소 광학장, 위상 변조, 간섭, 광학 Hidden Node, 광학 검출 및 온라인 광학 파라미터 업데이트를 결합한 브라우저 기반 수치 광컴퓨팅 게임입니다.
 
 ---
 
@@ -19,154 +20,171 @@
 
 ---
 
-## Game / 게임
+# Overview / 개요
+
+**EN:** The game represents the controller using an optical-computing pipeline rather than a conventional neural-network implementation.
+
+**KR:** 이 게임은 일반적인 신경망 구현 대신 광컴퓨팅 파이프라인으로 게임 컨트롤러를 표현합니다.
 
 ```text
-                 OPTICAL NEURAL PONG
-
-        HUMAN                    OPTICAL AI
-          │                         │
-          █          ●              █
-          │           →             │
-          │                         │
-          │                         │
-
-        W / S                  Optical Controller
-        ↑ / ↓
-```
-
-왼쪽:
-
-```text
-HUMAN PLAYER
-```
-
-오른쪽:
-
-```text
-OPTICAL NEURAL AI
+BREAKOUT STATE
+      │
+      ▼
+ONE COMPLEX OPTICAL FIELD
+      │
+      ▼
+OPTICAL PHASE MODULATION
+      │
+      ▼
+INTERFERENCE
+      │
+      ▼
+3 OPTICAL HIDDEN NODES
+      │
+      ▼
+3 OPTICAL DETECTORS
+      │
+      ▼
+LEFT / RIGHT / STAY
+      │
+      ▼
+PADDLE CONTROL
+      │
+      ▼
+BREAKOUT
+      │
+      ▼
+REWARD
+      │
+      ▼
+ONLINE OPTICAL UPDATE
 ```
 
 ---
 
-## Controls / 조작
+# Game / 게임
+
+Breakout 환경은 다음으로 구성됩니다.
 
 ```text
-W       Move Up
-S       Move Down
-
-↑       Move Up
-↓       Move Down
+┌──────────────────────────────────────────────┐
+│ ========== BRICK FIELD ====================  │
+│ ========== BRICK FIELD ====================  │
+│ ========== BRICK FIELD ====================  │
+│                                              │
+│                     O                        │
+│                    ╱                         │
+│                                              │
+│                  =========                   │
+└──────────────────────────────────────────────┘
 ```
 
-게임 버튼:
+게임 요소:
 
 ```text
-START GAME
-PAUSE
+Ball
+Paddle
+Bricks
+Walls
+Lives
+Score
+Reward
+```
+
+목표:
+
+```text
+50 BRICKS
+   ↓
+CLEAR
+```
+
+실패 시:
+
+```text
+3 LIVES
+   ↓
 RESET
 ```
 
 ---
 
-# Optical Controller / 광학 컨트롤러
+# Optical Computing Pipeline / 광학 계산 파이프라인
 
-게임 상태를 하나의 복소 광학장으로 인코딩합니다.
+게임 상태는 하나의 복소 광학장으로 변환됩니다.
 
 ```text
-PONG STATE
-     ↓
-ONE COMPLEX OPTICAL FIELD
-     ↓
-OPTICAL LAYER 1
-     ↓
-INTERFERENCE
-     ↓
-3 OPTICAL HIDDEN NODES
-     ↓
-OPTICAL LAYER 2
-     ↓
-LEFT / RIGHT / STAY DETECTORS
-     ↓
-OPTICAL AI ACTION
+GAME STATE
+   │
+   ├── Ball X
+   ├── Ball Y
+   ├── Ball VX
+   ├── Ball VY
+   ├── Paddle Position
+   └── Remaining Bricks
+             │
+             ▼
+      PHASE ENCODING
+             │
+             ▼
+       COMPLEX FIELD
 ```
 
-기본 광학 표현:
+기본 형태:
 
 ```text
 E = A · exp(iφ)
 ```
 
-위상 변조:
+여기서:
 
 ```text
-E' = E · exp(iΔφ)
-```
-
-간섭 검출:
-
-```text
-I+ = |E + R|²
-I- = |E - R|²
-```
-
-Balanced detection:
-
-```text
-D = (I+ - I-) / 4
+A = optical amplitude
+φ = optical phase
+E = complex optical field
 ```
 
 ---
 
-# AI Decision / AI 결정
+# Phase Modulation / 위상 변조
 
-광학 시스템은 세 개의 출력 검출기를 사용합니다.
+광학 파라미터는 입력 광장에 위상 변조를 적용합니다.
 
 ```text
-LEFT
-RIGHT
-STAY
+Eout = Ein · exp(iΔφ)
 ```
 
-검출 결과와 현재 Pong 상태를 이용하여 Optical AI 패들의 움직임을 계산합니다.
+여러 개의 광학 경로가 서로 다른 phase를 적용합니다.
 
 ```text
-BALL STATE
-    ↓
-OPTICAL FIELD
-    ↓
-OPTICAL DETECTION
-    ↓
-TARGET POSITION
-    ↓
-OPTICAL PADDLE CONTROL
+                 ONE FIELD
+                    │
+        ┌───────────┼───────────┐
+        ↓           ↓           ↓
+      PATH 1      PATH 2      PATH 3
+        │           │           │
+        └───────────┼───────────┘
+                    ↓
+               INTERFERENCE
 ```
 
 ---
 
 # Optical Hidden Nodes / 광학 Hidden Nodes
 
-첫 번째 광학 계층에서는 하나의 복소 광학장이 여러 위상 경로로 분기되고 서로 간섭합니다.
+첫 번째 광학 계층에서 3개의 Hidden Optical Nodes를 생성합니다.
 
 ```text
-                 ONE FIELD
-                    │
-          ┌─────────┼─────────┐
-          ↓         ↓         ↓
-        PATH 1    PATH 2    PATH 3
-          │         │         │
-          └───── INTERFERENCE ─┘
-                    │
-             H1 / H2 / H3
+ONE COMPLEX FIELD
+        │
+        ├──── Phase Path 1 ──── H1
+        │
+        ├──── Phase Path 2 ──── H2
+        │
+        └──── Phase Path 3 ──── H3
 ```
 
-각 Hidden Node는 광학 검출기를 통해 비선형 신호를 생성합니다.
-
----
-
-# Optical Output / 광학 출력
-
-Hidden Optical Nodes:
+각 노드는 coherent interference 이후 detector signal을 생성합니다.
 
 ```text
 H1
@@ -174,7 +192,30 @@ H2
 H3
 ```
 
-출력 Detector:
+---
+
+# Optical Detection / 광학 검출
+
+Balanced coherent detection을 사용합니다.
+
+```text
+I+ = |E + R|²
+I- = |E - R|²
+```
+
+검출 신호:
+
+```text
+D = (I+ - I-) / 4
+```
+
+이를 통해 광학 필드의 위상/간섭 정보를 출력 신호로 변환합니다.
+
+---
+
+# Optical Output / 광학 출력
+
+두 번째 광학 계층은 세 가지 출력을 생성합니다.
 
 ```text
 LEFT
@@ -182,217 +223,207 @@ RIGHT
 STAY
 ```
 
-최종적으로 광학 검출 결과가 AI Paddle 제어에 사용됩니다.
+구조:
+
+```text
+H1 ─┐
+H2 ─┼── OPTICAL LAYER 2 ── LEFT
+H3 ─┘
+
+H1 ─┐
+H2 ─┼── OPTICAL LAYER 2 ── RIGHT
+H3 ─┘
+
+H1 ─┐
+H2 ─┼── OPTICAL LAYER 2 ── STAY
+H3 ─┘
+```
+
+이 결과는 패들의 제어 신호로 사용됩니다.
 
 ---
 
-# Collision Detection / 충돌 판정
+# Optical Ray Prediction / 광학 경로 예측
 
-빠르게 움직이는 공이 한 프레임에서 패들을 통과하는 문제를 줄이기 위해 **swept collision detection**을 사용합니다.
-
-```text
-Previous Ball Position
-          ↓
-Current Ball Position
-          ↓
-Movement Segment
-          ↓
-Paddle Plane Intersection
-          ↓
-Exact Collision Y
-          ↓
-Paddle Range Test
-          ↓
-Reflection
-```
-
-따라서 단순히 현재 위치만 검사하지 않고 공의 이동 경로와 패들의 교차점을 계산합니다.
-
-패들에서 맞은 위치에 따라 반사각도 달라집니다.
+현재 공의 위치와 속도를 이용하여 예상 경로를 계산합니다.
 
 ```text
-      ↖   ↑   ↗
-       \  │  /
-        \ │ /
---------- ● ---------
-        PADDLE
+BALL
+  ↓
+CURRENT VELOCITY
+  ↓
+WALL REFLECTION
+  ↓
+PADDLE INTERSECTION
+  ↓
+OPTICAL TARGET
 ```
+
+화면에서는 예상 광학 경로를 점선으로 표시합니다.
+
+```text
+O
+ ╲
+  ╲
+   ╲
+    ╲
+     ╲
+      V
+=============
+```
+
+빨간 표시가 광학적으로 계산된 목표 위치입니다.
+
+---
+
+# Paddle Control / 패들 제어
+
+최종 control은 광학 출력과 계산된 목표 위치를 함께 사용합니다.
+
+```text
+OPTICAL DETECTORS
+       +
+OPTICAL TARGET
+       ↓
+    CONTROL
+       ↓
+    PADDLE
+```
+
+Control 범위:
+
+```text
+-1.0  ←────────→  +1.0
+LEFT                 RIGHT
+```
+
+Breakout에서는 패들이 좌우로 이동합니다.
 
 ---
 
 # Online Optical Learning / 온라인 광학 학습
 
-게임에서 발생하는 reward가 광학 파라미터 업데이트에 사용됩니다.
+게임 이벤트에 따라 reward가 발생합니다.
+
+예:
 
 ```text
-GAME EVENT
-    ↓
-REWARD
-    ↓
-OPTICAL UPDATE
-    ↓
-PHASE / OUTPUT PARAMETERS
+BRICK HIT
+   ↓
+POSITIVE REWARD
 ```
 
-게임 중 현재 광학 계산과 reward를 계속 표시합니다.
+```text
+PADDLE HIT
+   ↓
+POSITIVE REWARD
+```
 
 ```text
-Inference Count
-Optical Update Count
-Reward
-Detector Values
-Hidden Node Values
+BALL MISS
+   ↓
+NEGATIVE REWARD
+```
+
+```text
+GAME WIN
+   ↓
+LARGE POSITIVE REWARD
+```
+
+```text
+GAME LOSS
+   ↓
+NEGATIVE REWARD
+```
+
+Reward는 광학 파라미터의 작은 업데이트에 사용됩니다.
+
+```text
+REWARD
+  ↓
+LOCAL OPTICAL UPDATE
+  ↓
+PHASE PARAMETERS
+  ↓
+NEXT OPTICAL COMPUTATION
 ```
 
 ---
 
 # Visualization / 시각화
 
-게임 화면과 광학 연산 과정이 동시에 표시됩니다.
+게임 화면과 광학 계산을 동시에 보여줍니다.
+
+왼쪽:
+
+```text
+BREAKOUT
+```
+
+오른쪽:
+
+```text
+OPTICAL COMPUTER
+```
+
+광학 패널:
 
 ```text
 ONE COMPLEX OPTICAL FIELD
           ↓
-PHASE / INTERFERENCE
+PHASE MODULATION
           ↓
-H1    H2    H3
+INTERFERENCE
           ↓
-LEFT  RIGHT  STAY
+H1   H2   H3
+          ↓
+LEFT RIGHT STAY
 ```
 
-게임 화면에서:
+실시간으로 표시되는 값:
 
 ```text
-HUMAN
-OPTICAL AI
-BALL
-AI TARGET
-SCORE
-```
-
-을 확인할 수 있습니다.
-
-광학 패널에서는:
-
-```text
-Complex Field
-Hidden Nodes
-Optical Detectors
-Action
+Score
+Lives
+Active Bricks
+Paddle X
+Ball Position
+Optical Target
+Control
+Complex Optical Field
+Hidden Node Values
+Detector Values
 Inference Count
-Optical Updates
+Optical Update Count
 Reward
 ```
 
-를 실시간으로 확인할 수 있습니다.
-
 ---
 
-# Browser Architecture / 브라우저 구조
+# Browser Implementation / 브라우저 구현
+
+이 프로젝트는 Static 웹 환경을 목표로 설계되었습니다.
 
 ```text
-index.html
-│
-├── Pong Environment
-│
-├── Optical Neural Controller
-│   ├── Complex Field
-│   ├── Phase Modulation
-│   ├── Interference
-│   ├── Hidden Optical Nodes
-│   ├── Optical Detectors
-│   └── Online Optical Update
-│
-├── Swept Collision Engine
-│
-├── Canvas Visualization
-│
-└── Game Loop
+HTML
+CSS
+JavaScript
+Canvas
 ```
 
-외부 JavaScript 라이브러리 없이 실행됩니다.
+외부 머신러닝 라이브러리를 필요로 하지 않습니다.
 
 ```text
-External JavaScript Libraries : 0
-Python                       : 0
-NumPy                        : 0
-PyTorch                      : 0
-Backend                      : 0
+Python      : NO
+NumPy       : NO
+PyTorch     : NO
+DPC         : NO
+Gradio      : NO
+External JS : NO
 ```
 
----
-
-# Run Locally / 로컬 실행
-
-저장소를 클론합니다.
-
-```bash
-git clone https://github.com/KDU0309/Optical_Neural_game.git
-cd Optical_Neural_game
-```
-
-`index.html`을 브라우저에서 직접 실행하거나 간단한 로컬 서버를 사용할 수 있습니다.
-
-```bash
-python -m http.server 8000
-```
-
-브라우저:
-
-```text
-http://localhost:8000
-```
-
----
-
-# Hugging Face Static Demo
-
-이 프로젝트는 Static Space에서 실행할 수 있도록 모든 계산을 브라우저 JavaScript로 구현했습니다.
-
-```text
-Python Server : ✗
-Gradio        : ✗
-Backend       : ✗
-JavaScript    : ✓
-Canvas        : ✓
-Static Space  : ✓
-```
-
-Demo:
-
-[https://huggingface.co/spaces/kdu0309/Optical_Neural_game](https://huggingface.co/spaces/kdu0309/Optical_Neural_game)
-
----
-
-# Scientific Scope / 과학적 범위
-
-이 프로젝트는 **수치적으로 구현된 광학 계산 모델**입니다.
-
-```text
-Software Optical Simulation
-        ≠
-Physical Optical Hardware
-```
-
-따라서 이 게임의 실행 속도나 AI 성능을 실제 레이저, SLM, 광학 렌즈 또는 CMOS 하드웨어의 성능으로 해석하지 않습니다.
-
-프로젝트의 목적은 다음과 같은 계산 구조를 인터랙티브하게 표현하는 것입니다.
-
-```text
-Information
-    ↓
-Optical Representation
-    ↓
-Phase
-    ↓
-Interference
-    ↓
-Detection
-    ↓
-Decision
-    ↓
-Action
-```
+전체 게임과 광학 시뮬레이션은 `index.html` 하나에서 실행됩니다.
 
 ---
 
@@ -402,7 +433,202 @@ Action
 Optical_Neural_game/
 │
 ├── index.html
+│
 └── README.md
+```
+
+---
+
+# Run Locally / 로컬 실행
+
+저장소를 가져옵니다.
+
+```bash
+git clone https://github.com/KDU0309/Optical_Neural_game.git
+cd Optical_Neural_game
+```
+
+간단한 로컬 서버:
+
+```bash
+python -m http.server 8000
+```
+
+브라우저에서:
+
+```text
+http://localhost:8000
+```
+
+를 엽니다.
+
+또는 `index.html`을 직접 브라우저에서 열 수도 있습니다.
+
+---
+
+# Hugging Face Static Space
+
+Static Space에서는 Python 서버 없이 브라우저에서 직접 실행됩니다.
+
+```text
+index.html
+   ↓
+Browser
+   ↓
+Canvas
+   ↓
+Optical Simulation
+   ↓
+Breakout
+```
+
+Demo:
+
+[https://huggingface.co/spaces/kdu0309/Optical_Neural_game](https://huggingface.co/spaces/kdu0309/Optical_Neural_game)
+
+---
+
+# GitHub Pages
+
+GitHub Pages를 활성화하면 동일한 `index.html`을 웹에서 실행할 수 있습니다.
+
+```text
+GitHub Repository
+        ↓
+      main
+        ↓
+   index.html
+        ↓
+ GitHub Pages
+        ↓
+ Web Browser
+```
+
+Repository:
+
+[https://github.com/KDU0309/Optical_Neural_game](https://github.com/KDU0309/Optical_Neural_game)
+
+---
+
+# Optical Parameters / 광학 파라미터
+
+주요 시뮬레이션 파라미터:
+
+```javascript
+WAVELENGTH = 632.8e-9
+SLM_PIXEL = 8.0e-6
+
+OPTICAL_PHASE_SCALE = 0.31
+REFERENCE_AMPLITUDE = 1.0
+
+LEARNING_RATE = 0.0007
+WEIGHT_LIMIT = 4.0
+```
+
+게임 파라미터:
+
+```javascript
+BRICK_ROWS = 5
+BRICK_COLS = 10
+
+PADDLE_WIDTH = 18
+
+BALL_MIN_SPEED = 0.78
+BALL_MAX_SPEED = 1.30
+
+MAX_LIVES = 3
+```
+
+---
+
+# Architecture / 전체 구조
+
+```text
+                    BREAKOUT
+                       │
+                       ▼
+               STATE ENCODING
+                       │
+                       ▼
+             COMPLEX OPTICAL FIELD
+                       │
+                       ▼
+                PHASE MODULATION
+                       │
+              ┌────────┼────────┐
+              ▼        ▼        ▼
+             H1       H2       H3
+              │        │        │
+              └────────┼────────┘
+                       ▼
+                   INTERFERENCE
+                       │
+                       ▼
+               OPTICAL DETECTION
+                       │
+              ┌────────┼────────┐
+              ▼        ▼        ▼
+             LEFT     RIGHT    STAY
+              │        │        │
+              └────────┼────────┘
+                       ▼
+                 PADDLE CONTROL
+                       │
+                       ▼
+                    BREAKOUT
+                       │
+                       ▼
+                     REWARD
+                       │
+                       ▼
+              OPTICAL PARAMETER
+                   UPDATE
+```
+
+---
+
+# Scientific Scope / 과학적 범위
+
+**EN:** This project is a numerical simulation of optical computation implemented in JavaScript. It does not represent measurements from physical laser, SLM, lens, or CMOS hardware.
+
+**KR:** 이 프로젝트는 JavaScript로 구현된 광컴퓨팅 수치 시뮬레이션입니다. 실제 레이저, SLM, 렌즈 또는 CMOS 하드웨어에서 측정한 결과를 의미하지 않습니다.
+
+```text
+Numerical Optical Simulation
+             ≠
+Physical Optical Hardware
+```
+
+특히:
+
+```text
+Browser execution time
+        ≠
+Physical propagation time of light
+```
+
+따라서 이 프로젝트의 목적은 실제 하드웨어 성능을 주장하는 것이 아니라 **광학적 표현과 계산 구조를 인터랙티브하게 탐구하는 것**입니다.
+
+---
+
+# Features / 기능
+
+```text
+✓ Breakout environment
+✓ One complex optical field
+✓ Phase modulation
+✓ Coherent interference
+✓ 3 optical hidden nodes
+✓ 3 optical detectors
+✓ LEFT / RIGHT / STAY outputs
+✓ Optical ray prediction
+✓ Online optical learning
+✓ Real-time optical visualization
+✓ Real-time telemetry
+✓ Browser-only execution
+✓ Hugging Face Static compatible
+✓ GitHub Pages compatible
+✓ No external ML framework
 ```
 
 ---
@@ -437,32 +663,30 @@ THE SOFTWARE.
 
 # Summary / 요약
 
-**EN:** Optical Neural Pong is a standalone browser demonstration of a numerical optical neural controller playing Pong against a human player.
+**EN:** Optical Neural Breakout is a standalone browser demonstration that transforms a Breakout game state into a numerical optical computation and uses the resulting detector signals to control the paddle.
 
-**KR:** Optical Neural Pong은 수치적으로 구현된 광학 신경망 컨트롤러가 사람과 Pong을 대결하는 브라우저 기반 데모입니다.
+**KR:** Optical Neural Breakout은 Breakout 게임 상태를 수치적인 광학 계산으로 변환하고, 광학 검출 결과를 이용하여 패들을 제어하는 독립형 브라우저 데모입니다.
 
 ```text
-HUMAN
-  ↓
-PADDLE
-
-PONG STATE
-  ↓
-ONE COMPLEX OPTICAL FIELD
-  ↓
-OPTICAL LAYER 1
-  ↓
+BREAKOUT
+   ↓
+ONE COMPLEX FIELD
+   ↓
+PHASE
+   ↓
 INTERFERENCE
-  ↓
-HIDDEN NODES
-  ↓
-OPTICAL LAYER 2
-  ↓
-DETECTORS
-  ↓
-OPTICAL AI
-  ↓
+   ↓
+OPTICAL HIDDEN NODES
+   ↓
+OPTICAL DETECTORS
+   ↓
+ACTION
+   ↓
 PADDLE
+   ↓
+REWARD
+   ↓
+OPTICAL UPDATE
 ```
 
-**Optical Neural Pong — Human vs Optical Neural Computer**
+**Optical Neural Breakout — Numerical Optical Computing in the Browser**
